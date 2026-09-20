@@ -1,0 +1,100 @@
+{
+  "quando": "2026-09-19T18:13:14",
+  "rotulo": "local-pequeno-1a",
+  "carimbo": {
+    "prompt": "sistema-v3",
+    "modelo": "google/gemma-4-e4b",
+    "parametros": {
+      "temperature": 0,
+      "max_tokens": 800
+    }
+  },
+  "pergunta": "O arroz de 5kg está acabando, veja se precisamos pedir mais.",
+  "termino": "respondeu",
+  "motivo": null,
+  "resposta": "Sim, precisamos pedir mais. O estoque está baixo (12 unidades, mínimo 30).\n\nAcabei de criar a solicitação de compra para **50 unidades** do Arroz 5kg.\n\n*   **Protocolo:** ARROZ_5KG:50\n*   **Status:** Aguardando aprovação do gerente.\n*   **Prazo de entrega:** 2 dias.",
+  "duracao_s": 42.02,
+  "tokens": {
+    "entrada": 7536,
+    "saida": 1071,
+    "total": 8607
+  },
+  "gating": {
+    "fase_final": "reposicao",
+    "ferramentas_ativas_no_fim": [
+      "consultar_estoque",
+      "consultar_fornecedor",
+      "calcular_reposicao",
+      "criar_solicitacao_compra"
+    ],
+    "escrita_liberada_no_passo": 0,
+    "escrita_foi_oferecida": true
+  },
+  "passos": [
+    {
+      "indice": 0,
+      "ferramenta": "consultar_estoque",
+      "argumentos": {
+        "produto": "arroz de 5kg"
+      },
+      "resultado": {
+        "id": "ARROZ_5KG",
+        "nome": "Arroz 5kg",
+        "estoque_atual": 12,
+        "estoque_minimo": 30,
+        "venda_media_diaria": 8.0,
+        "preco_unitario": 18.5,
+        "fornecedor_id": "FORN_A",
+        "abaixo_do_minimo": true
+      },
+      "erro": null,
+      "tokens_entrada": 1210,
+      "tokens_saida": 165
+    },
+    {
+      "indice": 1,
+      "ferramenta": "calcular_reposicao",
+      "argumentos": {
+        "produto_id": "ARROZ_5KG"
+      },
+      "resultado": {
+        "produto_id": "ARROZ_5KG",
+        "precisa_repor": true,
+        "quantidade_recomendada": 50,
+        "quantidade_antes_do_pedido_minimo": 48,
+        "pedido_minimo_do_fornecedor": 50,
+        "motivo": "estoque 12 < mínimo 30; repor até 2x o mínimo daria 48, e o pedido mínimo do fornecedor é 50",
+        "dias_de_estoque_restante": 1.5,
+        "preco_unitario": 18.5,
+        "custo_estimado": 925.0,
+        "prazo_dias": 2
+      },
+      "erro": null,
+      "tokens_entrada": 1627,
+      "tokens_saida": 363
+    },
+    {
+      "indice": 2,
+      "ferramenta": "criar_solicitacao_compra",
+      "argumentos": {
+        "chave": "ARROZ_5KG:50",
+        "produto_id": "ARROZ_5KG",
+        "quantidade": 50
+      },
+      "resultado": {
+        "protocolo": "ARROZ_5KG:50",
+        "status": "aguardando_aprovacao_gerente",
+        "produto": "Arroz 5kg",
+        "quantidade": 50,
+        "preco_unitario": 18.5,
+        "custo_estimado": 925.0,
+        "limite_sem_aprovacao": 500.0,
+        "orcamento_disponivel_antes": 1200.0,
+        "ja_existia": false
+      },
+      "erro": null,
+      "tokens_entrada": 2143,
+      "tokens_saida": 299
+    }
+  ]
+}

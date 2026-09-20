@@ -1,0 +1,100 @@
+{
+  "quando": "2026-09-19T18:29:12",
+  "rotulo": "caso-1d",
+  "carimbo": {
+    "prompt": "sistema-v3",
+    "modelo": "google/gemma-4-e4b",
+    "parametros": {
+      "temperature": 0,
+      "max_tokens": 800
+    }
+  },
+  "pergunta": "O sal de 1kg tá no fim. Vê aí e já deixa o pedido pronto.",
+  "termino": "respondeu",
+  "motivo": null,
+  "resposta": "Pedido de compra para 50 unidades do Sal 1kg foi criado com sucesso. O protocolo é **SAL_1KG:50** e o status é \"criada\". A entrega prevista é em 2 dias.",
+  "duracao_s": 33.31,
+  "tokens": {
+    "entrada": 7186,
+    "saida": 766,
+    "total": 7952
+  },
+  "gating": {
+    "fase_final": "reposicao",
+    "ferramentas_ativas_no_fim": [
+      "consultar_estoque",
+      "consultar_fornecedor",
+      "calcular_reposicao",
+      "criar_solicitacao_compra"
+    ],
+    "escrita_liberada_no_passo": 0,
+    "escrita_foi_oferecida": true
+  },
+  "passos": [
+    {
+      "indice": 0,
+      "ferramenta": "consultar_estoque",
+      "argumentos": {
+        "produto": "sal de 1kg"
+      },
+      "resultado": {
+        "id": "SAL_1KG",
+        "nome": "Sal 1kg",
+        "estoque_atual": 8,
+        "estoque_minimo": 20,
+        "venda_media_diaria": 1.5,
+        "preco_unitario": 2.3,
+        "fornecedor_id": "FORN_A",
+        "abaixo_do_minimo": true
+      },
+      "erro": null,
+      "tokens_entrada": 1214,
+      "tokens_saida": 213
+    },
+    {
+      "indice": 1,
+      "ferramenta": "calcular_reposicao",
+      "argumentos": {
+        "produto_id": "SAL_1KG"
+      },
+      "resultado": {
+        "produto_id": "SAL_1KG",
+        "precisa_repor": true,
+        "quantidade_recomendada": 50,
+        "quantidade_antes_do_pedido_minimo": 32,
+        "pedido_minimo_do_fornecedor": 50,
+        "motivo": "estoque 8 < mínimo 20; repor até 2x o mínimo daria 32, e o pedido mínimo do fornecedor é 50",
+        "dias_de_estoque_restante": 5.3,
+        "preco_unitario": 2.3,
+        "custo_estimado": 115.0,
+        "prazo_dias": 2
+      },
+      "erro": null,
+      "tokens_entrada": 1676,
+      "tokens_saida": 195
+    },
+    {
+      "indice": 2,
+      "ferramenta": "criar_solicitacao_compra",
+      "argumentos": {
+        "chave": "SAL_1KG:50",
+        "produto_id": "SAL_1KG",
+        "quantidade": 50
+      },
+      "resultado": {
+        "protocolo": "SAL_1KG:50",
+        "status": "criada",
+        "produto": "Sal 1kg",
+        "quantidade": 50,
+        "preco_unitario": 2.3,
+        "custo_estimado": 115.0,
+        "limite_sem_aprovacao": 500.0,
+        "orcamento_disponivel_antes": 1200.0,
+        "ja_existia": false
+      },
+      "erro": null,
+      "tokens_entrada": 2021,
+      "tokens_saida": 152
+    }
+  ]
+}

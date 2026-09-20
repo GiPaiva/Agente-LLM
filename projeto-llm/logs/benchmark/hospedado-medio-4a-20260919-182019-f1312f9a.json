@@ -1,0 +1,54 @@
+{
+  "quando": "2026-09-19T18:20:19",
+  "rotulo": "hospedado-medio-4a",
+  "carimbo": {
+    "prompt": "sistema-v3",
+    "modelo": "qwen/qwen3.8-27b",
+    "parametros": {
+      "temperature": 0,
+      "max_tokens": 800
+    }
+  },
+  "pergunta": "Como está o estoque do feijão de 1kg?",
+  "termino": "respondeu",
+  "motivo": null,
+  "resposta": "Feijão 1kg: 40 unidades em estoque (mínimo 25). Está acima do mínimo, sem necessidade de reposição agora. Venda média de 3 unidades/dia, preço R$ 8,20.",
+  "duracao_s": 25.99,
+  "tokens": {
+    "entrada": 3026,
+    "saida": 86,
+    "total": 3112
+  },
+  "gating": {
+    "fase_final": "analise",
+    "ferramentas_ativas_no_fim": [
+      "consultar_estoque",
+      "consultar_fornecedor",
+      "calcular_reposicao"
+    ],
+    "escrita_liberada_no_passo": null,
+    "escrita_foi_oferecida": false
+  },
+  "passos": [
+    {
+      "indice": 0,
+      "ferramenta": "consultar_estoque",
+      "argumentos": {
+        "produto": "feijão 1kg"
+      },
+      "resultado": {
+        "id": "FEIJAO_1KG",
+        "nome": "Feijão 1kg",
+        "estoque_atual": 40,
+        "estoque_minimo": 25,
+        "venda_media_diaria": 3.0,
+        "preco_unitario": 8.2,
+        "fornecedor_id": "FORN_A",
+        "abaixo_do_minimo": false
+      },
+      "erro": null,
+      "tokens_entrada": 1446,
+      "tokens_saida": 34
+    }
+  ]
+}

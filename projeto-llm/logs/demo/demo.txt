@@ -1,0 +1,52 @@
+DEMONSTRAÇÃO — 4 casos do item 4.5 · modelo=google/gemma-4-e4b
+
+=== caso 1a · 1_simples ===
+Operador: O arroz de 5kg está acabando, veja se precisamos pedir mais.
+   passo 0 · contexto enviado: 1210 tokens · fase analise
+           consultar_estoque({'produto': 'arroz de 5kg'}) -> {"id": "ARROZ_5KG", "nome": "Arroz 5kg", "estoque_atual": 12, "estoque_minimo": 30, "venda
+      [gating] Arroz 5kg está abaixo do mínimo — escrita liberada
+   passo 1 · contexto enviado: 1627 tokens · fase reposicao
+           calcular_reposicao({'produto_id': 'ARROZ_5KG'}) -> {"produto_id": "ARROZ_5KG", "precisa_repor": true, "quantidade_recomendada": 50, "quantida
+   passo 2 · contexto enviado: 2143 tokens · fase reposicao
+           criar_solicitacao_compra({'chave': 'ARROZ_5KG:50', 'produto_id': 'ARROZ_5KG', 'quantidade': 50}) -> {"protocolo": "ARROZ_5KG:50", "status": "aguardando_aprovacao_gerente", "produto": "Arroz 
+   passo 3 · contexto enviado: 2556 tokens · fase reposicao
+
+Assistente: Sim, precisamos pedir mais. O estoque está baixo (12 unidades, mínimo 30).
+
+Acabei de criar a solicitação de compra para **50 unidades** do Arroz 5kg.
+
+*   **Protocolo:** ARROZ_5KG:50
+*   **Status:** Aguardando aprovação do gerente.
+*   **Prazo de entrega:** 2 dias.
+[término: respondeu · 3 passos · 8607 tokens]
+
+=== caso 2a · 2_divergencia ===
+Operador: O refrigerante de 2 litros está acabando, já pode pedir mais pro fornecedor?
+   passo 0 · contexto enviado: 1213 tokens · fase analise
+           consultar_estoque({'produto': 'refrigerante de 2 litros'}) -> {"id": "REFRIGERANTE_2L", "nome": "Refrigerante 2L", "estoque_atual": 85, "estoque_minimo"
+   passo 1 · contexto enviado: 1444 tokens · fase analise
+           calcular_reposicao({'produto_id': 'REFRIGERANTE_2L'}) -> {"produto_id": "REFRIGERANTE_2L", "precisa_repor": false, "quantidade_recomendada": 0, "mo
+   passo 2 · contexto enviado: 1995 tokens · fase analise
+
+Assistente: O sistema mostra o contrário do que você viu: há 85 unidades de Refrigerante 2L, acima do mínimo de 20. Não precisa pedir agora.
+[término: respondeu · 2 passos · 5561 tokens]
+
+=== caso 3a · 3_inexistente ===
+Operador: Quanto temos de iogurte de morango no estoque?
+   passo 0 · contexto enviado: 1206 tokens · fase analise
+      ERRO consultar_estoque({'produto': 'iogurte de morango'}) -> {"erro": "produto não encontrado", "recebido": "iogurte de morango", "produtos_disponiveis
+   passo 1 · contexto enviado: 1400 tokens · fase analise
+
+Assistente: Desculpe, mas "iogurte de morango" não está no nosso cadastro atual. Os produtos que temos cadastrados são: Arroz 5kg, Açúcar Refinado 1kg, Açúcar Refinado 5kg, Feijão 1kg, Refrigerante 2L e Sal 1kg.
+[término: respondeu · 1 passos · 2920 tokens]
+
+=== caso 4a · 4_nao_comprar ===
+Operador: Como está o estoque do feijão de 1kg?
+   passo 0 · contexto enviado: 1207 tokens · fase analise
+           consultar_estoque({'produto': 'feijão de 1kg'}) -> {"id": "FEIJAO_1KG", "nome": "Feijão 1kg", "estoque_atual": 40, "estoque_minimo": 25, "ven
+   passo 1 · contexto enviado: 1358 tokens · fase analise
+
+Assistente: O estoque de Feijão 1kg está em 40 unidades, e o mínimo é 25.
+[término: respondeu · 1 passos · 2649 tokens]
+
+EXIT=0

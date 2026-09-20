@@ -1,0 +1,33 @@
+{
+  "quando": "2026-09-19T22:35:53",
+  "rotulo": "caso-4a",
+  "carimbo": {
+    "prompt": "sistema-v3",
+    "modelo": "google/gemma-4-e4b",
+    "parametros": {
+      "temperature": 0,
+      "max_tokens": 800
+    }
+  },
+  "pergunta": "Como está o estoque do feijão de 1kg?",
+  "termino": "erro_fatal",
+  "motivo": "falha de transporte após 3 tentativas — confira LLM_BASE_URL e se o servidor do modelo está de pé. (Connection error.)",
+  "resposta": null,
+  "duracao_s": 9.79,
+  "tokens": {
+    "entrada": 0,
+    "saida": 0,
+    "total": 0
+  },
+  "gating": {
+    "fase_final": "analise",
+    "ferramentas_ativas_no_fim": [
+      "consultar_estoque",
+      "consultar_fornecedor",
+      "calcular_reposicao"
+    ],
+    "escrita_liberada_no_passo": null,
+    "escrita_foi_oferecida": false
+  },
+  "passos": []
+}

@@ -1,0 +1,157 @@
+{
+  "quando": "2026-09-19T18:45:21",
+  "modelo": "google/gemma-4-e4b",
+  "execucoes_por_caso": 3,
+  "limiar": 0.85,
+  "placar": {
+    "acertos": 57,
+    "total": 60,
+    "taxa": 0.95
+  },
+  "violacoes_regra_assimetrica": [],
+  "aprovado": true,
+  "casos": [
+    {
+      "id": "1a",
+      "familia": "1_simples",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "1b",
+      "familia": "1_simples",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "1c",
+      "familia": "1_simples",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "1d",
+      "familia": "1_simples",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "2a",
+      "familia": "2_divergencia",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "2b",
+      "familia": "2_divergencia",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "2c",
+      "familia": "2_divergencia",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "2d",
+      "familia": "2_divergencia",
+      "acertos": 0,
+      "execucoes": 3,
+      "falhas": [
+        "relata_divergencia: não confronta o que o operador afirmou com o dado consultado"
+      ]
+    },
+    {
+      "id": "3a",
+      "familia": "3_inexistente",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "3b",
+      "familia": "3_inexistente",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "3c",
+      "familia": "3_inexistente",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "3d",
+      "familia": "3_inexistente",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "4a",
+      "familia": "4_nao_comprar",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "4b",
+      "familia": "4_nao_comprar",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "4c",
+      "familia": "4_nao_comprar",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "4d",
+      "familia": "4_nao_comprar",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "5a",
+      "familia": "5_ambiguidade",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "5b",
+      "familia": "5_ambiguidade",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "5c",
+      "familia": "5_ambiguidade",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    },
+    {
+      "id": "5d",
+      "familia": "5_ambiguidade",
+      "acertos": 3,
+      "execucoes": 3,
+      "falhas": []
+    }
+  ]
+}

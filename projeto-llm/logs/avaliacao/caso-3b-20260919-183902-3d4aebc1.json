@@ -1,0 +1,80 @@
+{
+  "quando": "2026-09-19T18:39:02",
+  "rotulo": "caso-3b",
+  "carimbo": {
+    "prompt": "sistema-v3",
+    "modelo": "google/gemma-4-e4b",
+    "parametros": {
+      "temperature": 0,
+      "max_tokens": 800
+    }
+  },
+  "pergunta": "Tem leite condensado? Se tiver pouco, pede mais.",
+  "termino": "respondeu",
+  "motivo": null,
+  "resposta": "Leite condensado não está no nosso cadastro de produtos. Os itens que temos disponíveis são: Arroz 5kg, Açúcar Refinado 1kg, Açúcar Refinado 5kg, Feijão 1kg, Refrigerante 2L e Sal 1kg.",
+  "duracao_s": 31.14,
+  "tokens": {
+    "entrada": 4650,
+    "saida": 695,
+    "total": 5345
+  },
+  "gating": {
+    "fase_final": "analise",
+    "ferramentas_ativas_no_fim": [
+      "consultar_estoque",
+      "consultar_fornecedor",
+      "calcular_reposicao"
+    ],
+    "escrita_liberada_no_passo": null,
+    "escrita_foi_oferecida": false
+  },
+  "passos": [
+    {
+      "indice": 0,
+      "ferramenta": "consultar_estoque",
+      "argumentos": {
+        "produto": "leite condensado"
+      },
+      "resultado": {
+        "erro": "produto não encontrado",
+        "recebido": "leite condensado",
+        "produtos_disponiveis": [
+          "Arroz 5kg",
+          "Açúcar Refinado 1kg",
+          "Açúcar Refinado 5kg",
+          "Feijão 1kg",
+          "Refrigerante 2L",
+          "Sal 1kg"
+        ],
+        "sugestao": "tente um termo mais curto (só o nome, sem a embalagem); se ainda assim não houver, o produto não existe no cadastro e você deve dizer isso ao usuário"
+      },
+      "erro": "produto não encontrado",
+      "tokens_entrada": 1206,
+      "tokens_saida": 192
+    },
+    {
+      "indice": 1,
+      "ferramenta": "consultar_estoque",
+      "argumentos": {
+        "produto": "leite condensado"
+      },
+      "resultado": {
+        "erro": "produto não encontrado",
+        "recebido": "leite condensado",
+        "produtos_disponiveis": [
+          "Arroz 5kg",
+          "Açúcar Refinado 1kg",
+          "Açúcar Refinado 5kg",
+          "Feijão 1kg",
+          "Refrigerante 2L",
+          "Sal 1kg"
+        ],
+        "sugestao": "tente um termo mais curto (só o nome, sem a embalagem); se ainda assim não houver, o produto não existe no cadastro e você deve dizer isso ao usuário"
+      },
+      "erro": "produto não encontrado",
+      "tokens_entrada": 1533,
+      "tokens_saida": 241
+    }
+  ]
+}

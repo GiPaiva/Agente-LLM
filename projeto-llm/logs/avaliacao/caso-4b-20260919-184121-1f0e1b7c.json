@@ -1,0 +1,54 @@
+{
+  "quando": "2026-09-19T18:41:21",
+  "rotulo": "caso-4b",
+  "carimbo": {
+    "prompt": "sistema-v3",
+    "modelo": "google/gemma-4-e4b",
+    "parametros": {
+      "temperature": 0,
+      "max_tokens": 800
+    }
+  },
+  "pergunta": "quanto tem de refrigerante 2L?",
+  "termino": "respondeu",
+  "motivo": null,
+  "resposta": "O sistema mostra que há 85 unidades de Refrigerante 2L, e o mínimo é 20.",
+  "duracao_s": 6.08,
+  "tokens": {
+    "entrada": 2595,
+    "saida": 122,
+    "total": 2717
+  },
+  "gating": {
+    "fase_final": "analise",
+    "ferramentas_ativas_no_fim": [
+      "consultar_estoque",
+      "consultar_fornecedor",
+      "calcular_reposicao"
+    ],
+    "escrita_liberada_no_passo": null,
+    "escrita_foi_oferecida": false
+  },
+  "passos": [
+    {
+      "indice": 0,
+      "ferramenta": "consultar_estoque",
+      "argumentos": {
+        "produto": "refrigerante 2L"
+      },
+      "resultado": {
+        "id": "REFRIGERANTE_2L",
+        "nome": "Refrigerante 2L",
+        "estoque_atual": 85,
+        "estoque_minimo": 20,
+        "venda_media_diaria": 5.0,
+        "preco_unitario": 7.9,
+        "fornecedor_id": "FORN_B",
+        "abaixo_do_minimo": false
+      },
+      "erro": null,
+      "tokens_entrada": 1203,
+      "tokens_saida": 97
+    }
+  ]
+}

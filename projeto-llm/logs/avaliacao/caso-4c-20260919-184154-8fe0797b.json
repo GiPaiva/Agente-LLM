@@ -1,0 +1,54 @@
+{
+  "quando": "2026-09-19T18:41:54",
+  "rotulo": "caso-4c",
+  "carimbo": {
+    "prompt": "sistema-v3",
+    "modelo": "google/gemma-4-e4b",
+    "parametros": {
+      "temperature": 0,
+      "max_tokens": 800
+    }
+  },
+  "pergunta": "O feijão tá ok ou preciso me preocupar?",
+  "termino": "respondeu",
+  "motivo": null,
+  "resposta": "Está ok. Você tem 40 unidades de Feijão 1kg em estoque, e o mínimo é 25.",
+  "duracao_s": 21.14,
+  "tokens": {
+    "entrada": 2658,
+    "saida": 417,
+    "total": 3075
+  },
+  "gating": {
+    "fase_final": "analise",
+    "ferramentas_ativas_no_fim": [
+      "consultar_estoque",
+      "consultar_fornecedor",
+      "calcular_reposicao"
+    ],
+    "escrita_liberada_no_passo": null,
+    "escrita_foi_oferecida": false
+  },
+  "passos": [
+    {
+      "indice": 0,
+      "ferramenta": "consultar_estoque",
+      "argumentos": {
+        "produto": "feijão"
+      },
+      "resultado": {
+        "id": "FEIJAO_1KG",
+        "nome": "Feijão 1kg",
+        "estoque_atual": 40,
+        "estoque_minimo": 25,
+        "venda_media_diaria": 3.0,
+        "preco_unitario": 8.2,
+        "fornecedor_id": "FORN_A",
+        "abaixo_do_minimo": false
+      },
+      "erro": null,
+      "tokens_entrada": 1206,
+      "tokens_saida": 154
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "quando": "2026-09-19T18:30:59",
+  "rotulo": "caso-2a",
+  "carimbo": {
+    "prompt": "sistema-v3",
+    "modelo": "google/gemma-4-e4b",
+    "parametros": {
+      "temperature": 0,
+      "max_tokens": 800
+    }
+  },
+  "pergunta": "O refrigerante de 2 litros está acabando, já pode pedir mais pro fornecedor?",
+  "termino": "respondeu",
+  "motivo": null,
+  "resposta": "O sistema mostra o contrário do que você viu: há 85 unidades de Refrigerante 2L, acima do mínimo de 20. Não precisa pedir agora.",
+  "duracao_s": 39.02,
+  "tokens": {
+    "entrada": 4652,
+    "saida": 909,
+    "total": 5561
+  },
+  "gating": {
+    "fase_final": "analise",
+    "ferramentas_ativas_no_fim": [
+      "consultar_estoque",
+      "consultar_fornecedor",
+      "calcular_reposicao"
+    ],
+    "escrita_liberada_no_passo": null,
+    "escrita_foi_oferecida": false
+  },
+  "passos": [
+    {
+      "indice": 0,
+      "ferramenta": "consultar_estoque",
+      "argumentos": {
+        "produto": "refrigerante de 2 litros"
+      },
+      "resultado": {
+        "id": "REFRIGERANTE_2L",
+        "nome": "Refrigerante 2L",
+        "estoque_atual": 85,
+        "estoque_minimo": 20,
+        "venda_media_diaria": 5.0,
+        "preco_unitario": 7.9,
+        "fornecedor_id": "FORN_B",
+        "abaixo_do_minimo": false
+      },
+      "erro": null,
+      "tokens_entrada": 1213,
+      "tokens_saida": 139
+    },
+    {
+      "indice": 1,
+      "ferramenta": "calcular_reposicao",
+      "argumentos": {
+        "produto_id": "REFRIGERANTE_2L"
+      },
+      "resultado": {
+        "produto_id": "REFRIGERANTE_2L",
+        "precisa_repor": false,
+        "quantidade_recomendada": 0,
+        "motivo": "estoque 85 >= mínimo 20: não há necessidade de reposição",
+        "dias_de_estoque_restante": 17.0,
+        "custo_estimado": 0.0,
+        "prazo_dias": 5
+      },
+      "erro": null,
+      "tokens_entrada": 1444,
+      "tokens_saida": 458
+    }
+  ]
+}

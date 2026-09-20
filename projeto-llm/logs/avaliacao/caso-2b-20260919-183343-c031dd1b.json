@@ -1,0 +1,54 @@
+{
+  "quando": "2026-09-19T18:33:43",
+  "rotulo": "caso-2b",
+  "carimbo": {
+    "prompt": "sistema-v3",
+    "modelo": "google/gemma-4-e4b",
+    "parametros": {
+      "temperature": 0,
+      "max_tokens": 800
+    }
+  },
+  "pergunta": "Acabou o refrigerante 2L na gôndola, compra mais urgente.",
+  "termino": "respondeu",
+  "motivo": null,
+  "resposta": "O sistema mostra o contrário do que você viu: há 85 unidades de Refrigerante 2L, acima do mínimo de 20. Não precisa pedir reposição agora.",
+  "duracao_s": 28.44,
+  "tokens": {
+    "entrada": 2793,
+    "saida": 678,
+    "total": 3471
+  },
+  "gating": {
+    "fase_final": "analise",
+    "ferramentas_ativas_no_fim": [
+      "consultar_estoque",
+      "consultar_fornecedor",
+      "calcular_reposicao"
+    ],
+    "escrita_liberada_no_passo": null,
+    "escrita_foi_oferecida": false
+  },
+  "passos": [
+    {
+      "indice": 0,
+      "ferramenta": "consultar_estoque",
+      "argumentos": {
+        "produto": "refrigerante 2L"
+      },
+      "resultado": {
+        "id": "REFRIGERANTE_2L",
+        "nome": "Refrigerante 2L",
+        "estoque_atual": 85,
+        "estoque_minimo": 20,
+        "venda_media_diaria": 5.0,
+        "preco_unitario": 7.9,
+        "fornecedor_id": "FORN_B",
+        "abaixo_do_minimo": false
+      },
+      "erro": null,
+      "tokens_entrada": 1213,
+      "tokens_saida": 275
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "quando": "2026-09-19T18:15:43",
+  "rotulo": "local-pequeno-4a",
+  "carimbo": {
+    "prompt": "sistema-v3",
+    "modelo": "google/gemma-4-e4b",
+    "parametros": {
+      "temperature": 0,
+      "max_tokens": 800
+    }
+  },
+  "pergunta": "Como está o estoque do feijão de 1kg?",
+  "termino": "respondeu",
+  "motivo": null,
+  "resposta": "O estoque de Feijão 1kg está em 40 unidades, e o mínimo é 25.",
+  "duracao_s": 4.59,
+  "tokens": {
+    "entrada": 2565,
+    "saida": 84,
+    "total": 2649
+  },
+  "gating": {
+    "fase_final": "analise",
+    "ferramentas_ativas_no_fim": [
+      "consultar_estoque",
+      "consultar_fornecedor",
+      "calcular_reposicao"
+    ],
+    "escrita_liberada_no_passo": null,
+    "escrita_foi_oferecida": false
+  },
+  "passos": [
+    {
+      "indice": 0,
+      "ferramenta": "consultar_estoque",
+      "argumentos": {
+        "produto": "feijão de 1kg"
+      },
+      "resultado": {
+        "id": "FEIJAO_1KG",
+        "nome": "Feijão 1kg",
+        "estoque_atual": 40,
+        "estoque_minimo": 25,
+        "venda_media_diaria": 3.0,
+        "preco_unitario": 8.2,
+        "fornecedor_id": "FORN_A",
+        "abaixo_do_minimo": false
+      },
+      "erro": null,
+      "tokens_entrada": 1207,
+      "tokens_saida": 59
+    }
+  ]
+}

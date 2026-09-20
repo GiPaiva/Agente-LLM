@@ -1,0 +1,53 @@
+{
+  "quando": "2026-09-19T18:44:39",
+  "rotulo": "caso-5c",
+  "carimbo": {
+    "prompt": "sistema-v3",
+    "modelo": "google/gemma-4-e4b",
+    "parametros": {
+      "temperature": 0,
+      "max_tokens": 800
+    }
+  },
+  "pergunta": "confere o açúcar aí pra mim",
+  "termino": "respondeu",
+  "motivo": null,
+  "resposta": "Qual tipo de açúcar você gostaria que eu conferisse? Temos o Açúcar Refinado 1kg e o Açúcar Refinado 5kg.",
+  "duracao_s": 10.66,
+  "tokens": {
+    "entrada": 2572,
+    "saida": 220,
+    "total": 2792
+  },
+  "gating": {
+    "fase_final": "analise",
+    "ferramentas_ativas_no_fim": [
+      "consultar_estoque",
+      "consultar_fornecedor",
+      "calcular_reposicao"
+    ],
+    "escrita_liberada_no_passo": null,
+    "escrita_foi_oferecida": false
+  },
+  "passos": [
+    {
+      "indice": 0,
+      "ferramenta": "consultar_estoque",
+      "argumentos": {
+        "produto": "açúcar"
+      },
+      "resultado": {
+        "erro": "termo ambíguo: mais de um produto casa",
+        "recebido": "açúcar",
+        "candidatos": [
+          "Açúcar Refinado 1kg",
+          "Açúcar Refinado 5kg"
+        ],
+        "sugestao": "pergunte ao usuário qual deles ele quer; não escolha sozinho"
+      },
+      "erro": "termo ambíguo: mais de um produto casa",
+      "tokens_entrada": 1201,
+      "tokens_saida": 90
+    }
+  ]
+}

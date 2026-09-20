@@ -1,0 +1,14 @@
+# Dependências da Parte 1, com versão fixada (regra do enunciado).
+#
+#   openai ......... falar com o modelo. A biblioteca é da OpenAI, mas a
+#                    base_url aponta para o provedor escolhido em docs/modelos.md
+#                    — é a mesma pilha dos laboratórios da disciplina.
+#   python-dotenv .. ler o .env, que fica FORA do git.
+#
+# Nada além disto. O resto é biblioteca padrão do Python (sqlite3, json,
+# dataclasses, pathlib, unicodedata), de propósito: o item 4.1 pede pouco
+# código, e toda dependência a mais é uma coisa a mais que pode não instalar
+# na máquina de quem corrige.
+
+openai==3.16.2
+python-dotenv==1.2.2

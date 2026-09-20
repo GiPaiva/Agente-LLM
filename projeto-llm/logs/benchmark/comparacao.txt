@@ -1,0 +1,35 @@
+VERIFICAÇÃO MÍNIMA · 5 casos × 2 execução(ões) · mesmo prompt para todos
+
+
+### local-pequeno — google/gemma-4-e4b (máquina do grupo (túnel Cloudflare))
+  ok    1a  2/2  1_simples
+  ok    2a  2/2  2_divergencia
+  ok    3a  2/2  3_inexistente
+  ok    4a  2/2  4_nao_comprar
+  ok    5a  2/2  5_ambiguidade
+
+### hospedado-medio — qwen/qwen3.8-27b (Groq)
+      [rede] sem conexão — tentativa 1/3, repetindo em 3s
+  ok    1a  2/2  1_simples
+  ok    2a  2/2  2_divergencia
+  ok    3a  2/2  3_inexistente
+  ok    4a  2/2  4_nao_comprar
+  ok    5a  2/2  5_ambiguidade
+
+### hospedado-grande — openai/gpt-oss-120b (Groq)
+  ok    1a  2/2  1_simples
+  ok    2a  2/2  2_divergencia
+  ok    3a  2/2  3_inexistente
+  ok    4a  2/2  4_nao_comprar
+  ok    5a  2/2  5_ambiguidade
+
+==============================================================================
+candidato          modelo                     acerto   latência   tokens
+------------------------------------------------------------------------------
+local-pequeno      google/gemma-4-e4b       10/10         21.23s     4503
+hospedado-medio    qwen/qwen3.8-27b         10/10         30.49s     4377
+hospedado-grande   openai/gpt-oss-120b      10/10           7.5s     3750
+==============================================================================
+
+resultado: logs\benchmark\comparacao-20260919-182225.json
+EXIT=0

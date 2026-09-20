@@ -1,0 +1,80 @@
+{
+  "quando": "2026-09-19T18:21:38",
+  "rotulo": "hospedado-grande-3a",
+  "carimbo": {
+    "prompt": "sistema-v3",
+    "modelo": "openai/gpt-oss-120b",
+    "parametros": {
+      "temperature": 0,
+      "max_tokens": 800
+    }
+  },
+  "pergunta": "Quanto temos de iogurte de morango no estoque?",
+  "termino": "respondeu",
+  "motivo": null,
+  "resposta": "Não temos iogurte de morango cadastrado. No cadastro atual só constam: Arroz 5kg, Açúcar Refinado 1kg, Açúcar Refinado 5kg, Feijão 1kg, Refrigerante 2L e Sal 1kg.",
+  "duracao_s": 8.11,
+  "tokens": {
+    "entrada": 4086,
+    "saida": 170,
+    "total": 4256
+  },
+  "gating": {
+    "fase_final": "analise",
+    "ferramentas_ativas_no_fim": [
+      "consultar_estoque",
+      "consultar_fornecedor",
+      "calcular_reposicao"
+    ],
+    "escrita_liberada_no_passo": null,
+    "escrita_foi_oferecida": false
+  },
+  "passos": [
+    {
+      "indice": 0,
+      "ferramenta": "consultar_estoque",
+      "argumentos": {
+        "produto": "iogurte de morango"
+      },
+      "resultado": {
+        "erro": "produto não encontrado",
+        "recebido": "iogurte de morango",
+        "produtos_disponiveis": [
+          "Arroz 5kg",
+          "Açúcar Refinado 1kg",
+          "Açúcar Refinado 5kg",
+          "Feijão 1kg",
+          "Refrigerante 2L",
+          "Sal 1kg"
+        ],
+        "sugestao": "tente um termo mais curto (só o nome, sem a embalagem); se ainda assim não houver, o produto não existe no cadastro e você deve dizer isso ao usuário"
+      },
+      "erro": "produto não encontrado",
+      "tokens_entrada": 1182,
+      "tokens_saida": 54
+    },
+    {
+      "indice": 1,
+      "ferramenta": "consultar_estoque",
+      "argumentos": {
+        "produto": "iogurte"
+      },
+      "resultado": {
+        "erro": "produto não encontrado",
+        "recebido": "iogurte",
+        "produtos_disponiveis": [
+          "Arroz 5kg",
+          "Açúcar Refinado 1kg",
+          "Açúcar Refinado 5kg",
+          "Feijão 1kg",
+          "Refrigerante 2L",
+          "Sal 1kg"
+        ],
+        "sugestao": "tente um termo mais curto (só o nome, sem a embalagem); se ainda assim não houver, o produto não existe no cadastro e você deve dizer isso ao usuário"
+      },
+      "erro": "produto não encontrado",
+      "tokens_entrada": 1361,
+      "tokens_saida": 55
+    }
+  ]
+}

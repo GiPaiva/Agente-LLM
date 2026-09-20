@@ -1,0 +1,54 @@
+{
+  "quando": "2026-09-19T18:21:27",
+  "rotulo": "hospedado-grande-2a",
+  "carimbo": {
+    "prompt": "sistema-v3",
+    "modelo": "openai/gpt-oss-120b",
+    "parametros": {
+      "temperature": 0,
+      "max_tokens": 800
+    }
+  },
+  "pergunta": "O refrigerante de 2 litros está acabando, já pode pedir mais pro fornecedor?",
+  "termino": "respondeu",
+  "motivo": null,
+  "resposta": "O sistema mostra o contrário do que você viu: há 85 unidades de Refrigerante 2L, acima do mínimo de 20. Não é necessário fazer pedido agora; o estoque está suficiente.",
+  "duracao_s": 1.23,
+  "tokens": {
+    "entrada": 2557,
+    "saida": 270,
+    "total": 2827
+  },
+  "gating": {
+    "fase_final": "analise",
+    "ferramentas_ativas_no_fim": [
+      "consultar_estoque",
+      "consultar_fornecedor",
+      "calcular_reposicao"
+    ],
+    "escrita_liberada_no_passo": null,
+    "escrita_foi_oferecida": false
+  },
+  "passos": [
+    {
+      "indice": 0,
+      "ferramenta": "consultar_estoque",
+      "argumentos": {
+        "produto": "refrigerante 2 litros"
+      },
+      "resultado": {
+        "id": "REFRIGERANTE_2L",
+        "nome": "Refrigerante 2L",
+        "estoque_atual": 85,
+        "estoque_minimo": 20,
+        "venda_media_diaria": 5.0,
+        "preco_unitario": 7.9,
+        "fornecedor_id": "FORN_B",
+        "abaixo_do_minimo": false
+      },
+      "erro": null,
+      "tokens_entrada": 1188,
+      "tokens_saida": 91
+    }
+  ]
+}

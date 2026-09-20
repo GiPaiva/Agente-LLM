@@ -1,0 +1,184 @@
+{
+  "quando": "2026-09-19T18:22:25",
+  "execucoes_por_caso": 2,
+  "casos": [
+    "1a",
+    "2a",
+    "3a",
+    "4a",
+    "5a"
+  ],
+  "resultados": [
+    {
+      "rotulo": "local-pequeno",
+      "modelo": "google/gemma-4-e4b",
+      "onde": "máquina do grupo (túnel Cloudflare)",
+      "acertos": 10,
+      "total": 10,
+      "taxa": 1.0,
+      "latencia_media_s": 21.23,
+      "tokens_medios_por_execucao": 4503,
+      "casos": [
+        {
+          "caso": "1a",
+          "familia": "1_simples",
+          "acertos": 2,
+          "execucoes": 2,
+          "tokens_medios": 8607,
+          "resposta_exemplo": "Sim, precisamos pedir mais. O estoque está baixo (12 unidades, mínimo 30).\n\nAcabei de criar a solicitação de compra para **50 unidades** do Arroz 5kg.\n\n*   **Protocolo:** ARROZ_5KG:50\n*   **Status:** Aguardando aprovação do gerente.\n*   **Prazo de entrega:** 2 dias.",
+          "falhas": []
+        },
+        {
+          "caso": "2a",
+          "familia": "2_divergencia",
+          "acertos": 2,
+          "execucoes": 2,
+          "tokens_medios": 5561,
+          "resposta_exemplo": "O sistema mostra o contrário do que você viu: há 85 unidades de Refrigerante 2L, acima do mínimo de 20. Não precisa pedir agora.",
+          "falhas": []
+        },
+        {
+          "caso": "3a",
+          "familia": "3_inexistente",
+          "acertos": 2,
+          "execucoes": 2,
+          "tokens_medios": 2920,
+          "resposta_exemplo": "Desculpe, mas \"iogurte de morango\" não está no nosso cadastro atual. Os produtos que temos cadastrados são: Arroz 5kg, Açúcar Refinado 1kg, Açúcar Refinado 5kg, Feijão 1kg, Refrigerante 2L e Sal 1kg.",
+          "falhas": []
+        },
+        {
+          "caso": "4a",
+          "familia": "4_nao_comprar",
+          "acertos": 2,
+          "execucoes": 2,
+          "tokens_medios": 2649,
+          "resposta_exemplo": "O estoque de Feijão 1kg está em 40 unidades, e o mínimo é 25.",
+          "falhas": []
+        },
+        {
+          "caso": "5a",
+          "familia": "5_ambiguidade",
+          "acertos": 2,
+          "execucoes": 2,
+          "tokens_medios": 2779,
+          "resposta_exemplo": "Temos dois tipos de açúcar: Açúcar Refinado 1kg e Açúcar Refinado 5kg. Qual você gostaria de saber?",
+          "falhas": []
+        }
+      ]
+    },
+    {
+      "rotulo": "hospedado-medio",
+      "modelo": "qwen/qwen3.8-27b",
+      "onde": "Groq",
+      "acertos": 10,
+      "total": 10,
+      "taxa": 1.0,
+      "latencia_media_s": 30.49,
+      "tokens_medios_por_execucao": 4377,
+      "casos": [
+        {
+          "caso": "1a",
+          "familia": "1_simples",
+          "acertos": 2,
+          "execucoes": 2,
+          "tokens_medios": 7606,
+          "resposta_exemplo": "Sim, precisa pedir. Estoque: 12 (mínimo 30), sobra ~1,5 dia de venda.\n\nSolicitação registrada:\n- Produto: Arroz 5kg\n- Quantidade: 50 (pedido mínimo do fornecedor)\n- Custo estimado: R$ 925,00\n- Prazo: 2 dias\n- Protocolo: ARROZ_5KG:50\n- Status: aguardando aprovação do gerente (acima do limite de R$ 500)",
+          "falhas": []
+        },
+        {
+          "caso": "2a",
+          "familia": "2_divergencia",
+          "acertos": 2,
+          "execucoes": 2,
+          "tokens_medios": 3134,
+          "resposta_exemplo": "O sistema mostra o contrário do que você viu: há 85 unidades de Refrigerante 2L, acima do mínimo de 20.\n\nNão precisa pedir agora. Vale conferir a gôndola — pode ser que a reposição da prateleira esteja pendente, mas o estoque registrado está tranquilo.",
+          "falhas": []
+        },
+        {
+          "caso": "3a",
+          "familia": "3_inexistente",
+          "acertos": 2,
+          "execucoes": 2,
+          "tokens_medios": 4975,
+          "resposta_exemplo": "Iogurte de morango não está no cadastro. Os produtos que temos são: Arroz 5kg, Açúcar Refinado 1kg, Açúcar Refinado 5kg, Feijão 1kg, Refrigerante 2L e Sal 1kg.",
+          "falhas": []
+        },
+        {
+          "caso": "4a",
+          "familia": "4_nao_comprar",
+          "acertos": 2,
+          "execucoes": 2,
+          "tokens_medios": 3112,
+          "resposta_exemplo": "Feijão 1kg: 40 unidades em estoque (mínimo 25). Está acima do mínimo, sem necessidade de reposição agora. Venda média de 3 unidades/dia, preço R$ 8,20.",
+          "falhas": []
+        },
+        {
+          "caso": "5a",
+          "familia": "5_ambiguidade",
+          "acertos": 2,
+          "execucoes": 2,
+          "tokens_medios": 3057,
+          "resposta_exemplo": "Tem dois no cadastro: **Açúcar Refinado 1kg** e **Açúcar Refinado 5kg**. Qual dos dois você quer?",
+          "falhas": []
+        }
+      ]
+    },
+    {
+      "rotulo": "hospedado-grande",
+      "modelo": "openai/gpt-oss-120b",
+      "onde": "Groq",
+      "acertos": 10,
+      "total": 10,
+      "taxa": 1.0,
+      "latencia_media_s": 7.5,
+      "tokens_medios_por_execucao": 3750,
+      "casos": [
+        {
+          "caso": "1a",
+          "familia": "1_simples",
+          "acertos": 2,
+          "execucoes": 2,
+          "tokens_medios": 6443,
+          "resposta_exemplo": "O arroz 5 kg está abaixo do mínimo: há 12 unidades, mínimo 30. Precisa repor. Solicitei 50 unidades (custo estimado R$ 925,00). Protocolo: **ARROZ_5KG:50**, status **aguardando_aprovacao_gerente**. O fornecedor entrega em 2 dias.",
+          "falhas": []
+        },
+        {
+          "caso": "2a",
+          "familia": "2_divergencia",
+          "acertos": 2,
+          "execucoes": 2,
+          "tokens_medios": 2838,
+          "resposta_exemplo": "O sistema mostra o contrário do que você viu: há **85** unidades de **Refrigerante 2 L**, acima do mínimo de **20**. Não precisa pedir agora — vale conferir a gôndola, pode ser reposição pendente.",
+          "falhas": []
+        },
+        {
+          "caso": "3a",
+          "familia": "3_inexistente",
+          "acertos": 2,
+          "execucoes": 2,
+          "tokens_medios": 4268,
+          "resposta_exemplo": "O produto **iogurte de morango** não está cadastrado. No sistema constam apenas: Arroz 5kg, Açúcar Refinado 1kg, Açúcar Refinado 5kg, Feijão 1kg, Refrigerante 2L e Sal 1kg.",
+          "falhas": []
+        },
+        {
+          "caso": "4a",
+          "familia": "4_nao_comprar",
+          "acertos": 2,
+          "execucoes": 2,
+          "tokens_medios": 2596,
+          "resposta_exemplo": "O estoque de Feijão 1kg está com 40 unidades, acima do mínimo de 25. Não há necessidade de reposição no momento.",
+          "falhas": []
+        },
+        {
+          "caso": "5a",
+          "familia": "5_ambiguidade",
+          "acertos": 2,
+          "execucoes": 2,
+          "tokens_medios": 2608,
+          "resposta_exemplo": "Você tem dois itens cadastrados com “açúcar”. Qual deles você quer consultar: **Açúcar Refinado 1 kg** ou **Açúcar Refinado 5 kg**?",
+          "falhas": []
+        }
+      ]
+    }
+  ]
+}

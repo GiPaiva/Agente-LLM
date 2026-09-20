@@ -1,0 +1,53 @@
+{
+  "quando": "2026-09-19T18:45:00",
+  "rotulo": "caso-5d",
+  "carimbo": {
+    "prompt": "sistema-v3",
+    "modelo": "google/gemma-4-e4b",
+    "parametros": {
+      "temperature": 0,
+      "max_tokens": 800
+    }
+  },
+  "pergunta": "quanto de açúcar temos em estoque?",
+  "termino": "respondeu",
+  "motivo": null,
+  "resposta": "Temos dois tipos de açúcar: Açúcar Refinado 1kg e Açúcar Refinado 5kg. Qual você gostaria de consultar?",
+  "duracao_s": 10.64,
+  "tokens": {
+    "entrada": 2573,
+    "saida": 222,
+    "total": 2795
+  },
+  "gating": {
+    "fase_final": "analise",
+    "ferramentas_ativas_no_fim": [
+      "consultar_estoque",
+      "consultar_fornecedor",
+      "calcular_reposicao"
+    ],
+    "escrita_liberada_no_passo": null,
+    "escrita_foi_oferecida": false
+  },
+  "passos": [
+    {
+      "indice": 0,
+      "ferramenta": "consultar_estoque",
+      "argumentos": {
+        "produto": "açúcar"
+      },
+      "resultado": {
+        "erro": "termo ambíguo: mais de um produto casa",
+        "recebido": "açúcar",
+        "candidatos": [
+          "Açúcar Refinado 1kg",
+          "Açúcar Refinado 5kg"
+        ],
+        "sugestao": "pergunte ao usuário qual deles ele quer; não escolha sozinho"
+      },
+      "erro": "termo ambíguo: mais de um produto casa",
+      "tokens_entrada": 1201,
+      "tokens_saida": 91
+    }
+  ]
+}

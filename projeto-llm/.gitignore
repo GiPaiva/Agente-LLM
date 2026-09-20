@@ -1,0 +1,13 @@
+.DS_Store
+
+# Chave de API NUNCA no repositório (regra geral do enunciado).
+.env
+
+# Ambiente e cache
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Banco simulado — regenerado por dados/gerar_banco.py na 1a execução
+dados/estoque.db

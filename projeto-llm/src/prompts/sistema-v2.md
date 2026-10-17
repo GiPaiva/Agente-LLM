@@ -9,7 +9,7 @@ modelo ou um parâmetro. O carimbo acima vai junto em **todo** registro de
 uma arqueologia.
 
 A v1 continua em `prompts/sistema-v1.md`. O diff e o motivo de cada mudança
-estão em [`docs/decisoes.md`](../docs/decisoes.md).
+estão em [`docs/decisoes.md`](../../docs/decisoes.md).
 
 ## Técnica
 

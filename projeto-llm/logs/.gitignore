@@ -1,0 +1,27 @@
+# Logs novos ficam locais por padrão. Os históricos já rastreados são preservados.
+# Para publicar uma nova evidência, selecione-a aqui e atualize docs/entrega.md.
+*
+!*/
+!/.gitignore
+!/README.md
+
+# Relatórios finais: 60 casos, MCP e comparação de um/dois agentes.
+!/integrado/controlado/20261016-205908-359691/relatorio.json
+!/integrado/controlado/20261016-205912-848760/relatorio.json
+!/integrado/controlado/20261016-205923-805624/relatorio.json
+!/integrado/controlado/20261016-205924-406570/relatorio.json
+!/comparacao-agentes/20261016-205925.json
+
+# Trajetórias completas dos nove exemplos citados em docs/io.md.
+!/demonstracoes/controlado/20261016-205911-500768/*.json
+!/demonstracoes/controlado/20261016-210017-891255-fora-escopo/*.json
+
+# Recuperação: falha inicial preservada e rodada final com embeddings reais.
+!/rag/20261016-175857.json
+!/rag/20261016-205829.json
+
+# Preparo, reducers e registro dos comandos da verificação final.
+!/instalacao/preparacao.json
+!/reducers/demonstracao.json
+!/validacao/resumo.json
+!/validacao/comandos-20261016-205927.json

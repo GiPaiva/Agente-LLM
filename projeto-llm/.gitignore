@@ -11,3 +11,4 @@ __pycache__/
 
 # Banco simulado — regenerado por dados/gerar_banco.py na 1a execução
 dados/estoque.db
+runtime/

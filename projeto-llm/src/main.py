@@ -1,91 +1,87 @@
-# Parte 1 — ponto de entrada.
-#
-#   python src/main.py            conversa, interativo
-#   python src/main.py --demo     roda os 4 casos do item 4.5 e grava logs/demo/
-#
-# Os 4 casos da demonstração são os primeiros de cada família obrigatória do
-# conjunto rotulado (dados/casos_rotulados.py) — o mesmo conjunto que
-# src/avaliar.py usa. Demo e verificador medindo coisas diferentes é como não
-# ter verificador.
-
+"""Texto livre, conversa persistente e aprovação em perfil simulado."""
 import argparse
+import json
 import sys
+from dataclasses import replace
 from pathlib import Path
-
-RAIZ = Path(__file__).parent.parent
-sys.path.insert(0, str(Path(__file__).parent))     # permite `import db`, `import agente`
-sys.path.insert(0, str(RAIZ / "dados"))            # permite `import gerar_banco`
-
-import db                                                    # noqa: E402
-import gerar_banco                                           # noqa: E402
-from casos_rotulados import CASOS_DEMO, por_id                # noqa: E402
-from agente import rodar, resumo, cliente_e_modelo, Orcamento  # noqa: E402
+from config import Config
+from grafo import Aplicacao
 
 
-def garantir_banco() -> None:
-    if not db.banco_existe():
-        print("Banco não encontrado — gerando dados/estoque.db com dados simulados...")
-        gerar_banco.gerar()
-
-
-def rodar_demo(limpar_entre_casos: bool) -> None:
-    """Os 4 casos do item 4.5, com o log de cada um no repositório."""
-    garantir_banco()
-    client, modelo = cliente_e_modelo()
-    print(f"DEMONSTRAÇÃO — 4 casos do item 4.5 · modelo={modelo}\n")
-
-    for caso_id in CASOS_DEMO:
-        caso = por_id(caso_id)
-        if limpar_entre_casos:
-            # Cada caso parte do mesmo estado. Sem isso, o caso 1 debita o
-            # orçamento e o seguinte roda contra um banco diferente do
-            # documentado — e o log deixa de ser reproduzível.
-            gerar_banco.gerar_silencioso()
-
-        print(f"=== caso {caso['id']} · {caso['familia']} ===")
-        print(f"Operador: {caso['pergunta']}")
-        estado = rodar(caso["pergunta"], orcamento=Orcamento(),
-                       client=client, modelo=modelo,
-                       salvar_em=RAIZ / "logs" / "demo",
-                       rotulo=f"caso-{caso['id']}")
-        print(f"\nAssistente: {estado.resposta}")
-        print(f"[{resumo(estado)}]\n")
-
-
-def rodar_interativo() -> None:
-    garantir_banco()
-    client, modelo = cliente_e_modelo()
-    print(f"Assistente de estoque ({modelo}) — pergunte sobre um produto, "
-          f"ou 'sair'.")
-    while True:
-        try:
-            pergunta = input("\nVocê: ").strip()
-        except (EOFError, KeyboardInterrupt):
-            print()
-            break
-        if pergunta.lower() in {"sair", "exit", "quit", ""}:
-            break
-        estado = rodar(pergunta, orcamento=Orcamento(),
-                       client=client, modelo=modelo,
-                       salvar_em=RAIZ / "logs" / "interativo")
-        print(f"\nAssistente: {estado.resposta}")
-        print(f"[{resumo(estado)}]")
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Assistente de reposição de estoque — Parte 1")
-    parser.add_argument("--demo", action="store_true",
-                        help="roda os 4 casos do item 4.5 e grava logs/demo/")
-    parser.add_argument("--manter-banco", action="store_true",
-                        help="no --demo, não regenera o banco entre os casos")
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('texto', nargs='?')
+    parser.add_argument('--thread')
+    parser.add_argument('--usuario', default='operador-demo')
+    parser.add_argument('--perfil', choices=['operador', 'gerente'], default='operador')
+    parser.add_argument('--retomar', choices=['aprovar', 'rejeitar'])
+    parser.add_argument('--quantidade', type=int)
+    parser.add_argument('--pendentes', action='store_true')
+    parser.add_argument('--remover-conversa')
+    parser.add_argument('--um-agente', action='store_true')
+    parser.add_argument('--sem-mcp', action='store_true')
+    parser.add_argument('--runtime', type=Path)
+    parser.add_argument('--demo', action='store_true', help='seis cenários; requer modelo real')
+    parser.add_argument('--controlado', action='store_true', help='dublê explicitamente identificado')
     args = parser.parse_args()
-
+    config = Config.ambiente()
+    if args.runtime:
+        config = replace(config, runtime=args.runtime)
+    elif args.controlado:
+        config = replace(config, runtime=config.runtime / "controlado")
+    kwargs = {}
+    if args.controlado:
+        from simulador import EmbeddingControlado, ModeloControlado
+        kwargs = dict(modelo=ModeloControlado(), embedding=EmbeddingControlado())
     if args.demo:
-        rodar_demo(limpar_entre_casos=not args.manter_banco)
-    else:
-        rodar_interativo()
+        from avaliar import demonstrar
+        try:
+            return demonstrar(config, args.controlado, not args.um_agente, not args.sem_mcp)
+        except RuntimeError as erro:
+            print(str(erro), file=sys.stderr)
+            return 2
+    try:
+        with Aplicacao(config, multi=not args.um_agente, usar_mcp=not args.sem_mcp, **kwargs) as app:
+            codigo = 0
+            def imprimir(saida):
+                nonlocal codigo
+                if saida.status == "falha":
+                    codigo = 1
+                print(json.dumps({'modo': app.modelo.modo, 'saida': saida.model_dump()}, ensure_ascii=False, indent=2))
+            if args.pendentes:
+                print(json.dumps(app.servico.pendentes(), ensure_ascii=False, indent=2))
+            elif args.remover_conversa:
+                if args.perfil != 'gerente':
+                    raise PermissionError('Remoção exige perfil simulado gerente.')
+                print(json.dumps(app.remover_conversa(args.remover_conversa), ensure_ascii=False, indent=2))
+            elif args.retomar:
+                if not args.thread:
+                    parser.error('--retomar exige --thread')
+                imprimir(app.retomar(args.thread, {'acao': args.retomar, 'quantidade': args.quantidade}, args.perfil))
+            elif args.texto:
+                imprimir(app.iniciar(args.texto, args.usuario, args.thread))
+            else:
+                thread = args.thread
+                print('Assistente simulado. Digite sair. O perfil gerente não possui autenticação real.')
+                while True:
+                    try:
+                        texto = input('Você: ').strip()
+                    except (EOFError, KeyboardInterrupt):
+                        print()
+                        break
+                    if not texto or texto.lower() == 'sair':
+                        break
+                    saida = app.iniciar(texto, args.usuario, thread)
+                    thread = saida.thread_id
+                    imprimir(saida)
+                    if saida.status == 'aguardando_aprovacao':
+                        print('Retome em outra chamada com --perfil gerente --thread', thread, '--retomar aprovar ou rejeitar.')
+                        break
+        return codigo
+    except (ValueError, PermissionError, RuntimeError) as erro:
+        print(str(erro), file=sys.stderr)
+        return 2
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    raise SystemExit(main())

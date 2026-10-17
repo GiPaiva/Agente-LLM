@@ -1,0 +1,26 @@
+{
+  "calibracao": [
+    {"pergunta":"Uma solicitação de 700 reais depende de quem?","fontes":["POL-V2:1:"]},
+    {"pergunta":"Gerente pode aprovar compra sem saldo suficiente?","fontes":["POL-V2:2:"]},
+    {"pergunta":"Como reduzir a quantidade quando o orçamento não basta?","fontes":["POL-V2:2:"]},
+    {"pergunta":"Posso receber as unidades boas separadas das avariadas?","fontes":["FORN-A-V1:2:"]},
+    {"pergunta":"O que fazer se o depósito tem mercadoria mas a gôndola está vazia?","fontes":["CONF-V1:1:"]},
+    {"pergunta":"Qual o tempo máximo de espera da aprovação pendente?","fontes":["POL-V2:4:"]},
+    {"pergunta":"Como determinar a quantidade para repor o estoque?","fontes":["POL-V2:3:"]},
+    {"pergunta":"O fornecedor de mercearia vende menos de cinquenta unidades?","fontes":["FORN-A-V1:1:"]},
+    {"pergunta":"Bebidas chegam em quantos dias e têm qual pedido mínimo?","fontes":["FORN-B-V1:1:"]},
+    {"pergunta":"Qual a temperatura ideal para congelar sorvete?","fontes":[]}
+  ],
+  "avaliacao": [
+    {"pergunta":"Quantas unidades de arroz 5kg estão cadastradas?","forma":"consulta estruturada","ferramenta":"consultar_estoque","argumentos":{"produto":"arroz"},"campo":"estoque_atual","esperado":12},
+    {"pergunta":"Qual o prazo cadastrado do Fornecedor A?","forma":"consulta estruturada","ferramenta":"consultar_fornecedor","argumentos":{"fornecedor":"FORN_A"},"campo":"prazo_dias","esperado":2},
+    {"pergunta":"Quanto saldo resta para comprar arroz?","forma":"consulta estruturada","ferramenta":"calcular_reposicao","argumentos":{"produto_id":"ARROZ_5KG"},"campo":"orcamento_disponivel","esperado":1200},
+    {"pergunta":"Qual a quantidade recomendada para repor sal?","forma":"consulta estruturada","ferramenta":"calcular_reposicao","argumentos":{"produto_id":"SAL_1KG"},"campo":"quantidade","esperado":50},
+    {"pergunta":"Qual valor exige aprovação do gerente?","forma":"busca vetorial","fontes":["POL-V2:1:"]},
+    {"pergunta":"Excepcionalmente, como o gerente pode ajustar uma compra que passa do saldo?","forma":"busca vetorial","fontes":["POL-V2:2:"],"excecao":true},
+    {"pergunta":"Se só parte da carga estiver avariada, posso receber o restante?","forma":"busca vetorial","fontes":["FORN-A-V1:2:"],"excecao":true},
+    {"pergunta":"Banco mostra estoque mas o operador não acha produto na gôndola. Como agir?","forma":"busca vetorial","fontes":["CONF-V1:1:"]},
+    {"pergunta":"A ausência de resposta do gerente autoriza o pedido após um dia?","forma":"busca vetorial","fontes":["POL-V2:4:"]},
+    {"pergunta":"Qual a política de garantia de televisores?","forma":"busca vetorial","fontes":[],"fora_corpus":true}
+  ]
+}

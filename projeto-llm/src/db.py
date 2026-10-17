@@ -6,7 +6,7 @@
 #
 # As ferramentas do agente (ferramentas.py) NUNCA escrevem SQL diretamente —
 # elas chamam as funções deste módulo. No dia em que este banco virar servidor
-# MCP (Parte 2) ou Postgres, só este arquivo muda.
+# MCP (Parte 3) ou Postgres, só este arquivo muda.
 
 import re
 import sqlite3

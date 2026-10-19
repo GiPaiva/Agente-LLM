@@ -436,3 +436,159 @@ def test_espera_humana_nao_consume_processamento(tmp_path,monkeypatch):
         r=a.retomar(r.thread_id,{'acao':'aprovar'},'gerente')
         assert r.status=='criada' and quantidade(a.servico)==1
         assert a.grafo.get_state(a._config(r.thread_id)).values['processamento_s']==0
+
+
+# --- Parte 2: compatibilidade com o servidor local e evidência honesta ---
+
+def _servidor_falso(finish_reason='tool_calls'):
+    import threading
+    from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
+    requests = []
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self, *args): pass
+        def do_POST(self):
+            payload = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
+            requests.append(payload)
+            if isinstance(payload.get('tool_choice'), dict):  # comportamento real do LM Studio
+                raw = json.dumps({'error': "Invalid tool_choice type: 'object'."}).encode()
+                self.send_response(400)
+            else:
+                raw = json.dumps({'id': 't', 'object': 'chat.completion', 'created': 1, 'model': 'local',
+                    'choices': [{'index': 0, 'finish_reason': finish_reason, 'message': {'role': 'assistant', 'content': None,
+                        'tool_calls': [{'id': 'c1', 'type': 'function', 'function': {'name': 'extrair_intencao',
+                            'arguments': json.dumps({'intencao': 'consulta', 'produto': 'sal'})}}]}}],
+                    'usage': {'prompt_tokens': 20, 'completion_tokens': 4, 'total_tokens': 24}}).encode()
+                self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(raw))); self.end_headers(); self.wfile.write(raw)
+    server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server, requests
+
+
+def _chamar_triagem(tmp_path, server, **config):
+    from openai import OpenAI
+    from modelo import Modelo
+    from contratos import Interpretacao, RespostaModelo
+    from grafo import ferramenta_saida
+    with OpenAI(base_url=f'http://127.0.0.1:{server.server_port}/v1', api_key='x', max_retries=0) as client:
+        modelo = Modelo(Config(runtime=tmp_path, **config), client, 'local')
+        return modelo.chamar([{'role': 'user', 'content': 'Quanto temos de sal?'}],
+            [ferramenta_saida('emitir_resposta', RespostaModelo), ferramenta_saida('extrair_intencao', Interpretacao)],
+            obrigatoria='extrair_intencao')
+
+
+def test_ferramenta_obrigatoria_sem_tool_choice_nomeado(tmp_path):
+    server, requests = _servidor_falso()
+    try:
+        r = _chamar_triagem(tmp_path, server, max_tokens_resposta=1234)
+        assert r['nome'] == 'extrair_intencao' and not r.get('erro')
+        enviado = requests[0]
+        assert enviado['tool_choice'] == 'required' and enviado['max_tokens'] == 1234
+        assert [t['function']['name'] for t in enviado['tools']] == ['extrair_intencao']
+    finally:
+        server.shutdown(); server.server_close()
+
+
+def test_resposta_truncada_nunca_vira_saida_valida(tmp_path):
+    server, _ = _servidor_falso(finish_reason='length')
+    try:
+        r = _chamar_triagem(tmp_path, server)
+        assert 'truncada' in r['erro'] and r['argumentos'] == {}
+    finally:
+        server.shutdown(); server.server_close()
+
+
+def test_config_de_ambiente_e_log_com_parametros_reais(tmp_path, monkeypatch):
+    monkeypatch.setenv('LLM_MAX_TOKENS', '2048'); monkeypatch.setenv('LLM_TIMEOUT', '45')
+    monkeypatch.setenv('AGENTE_RUNTIME', str(tmp_path))
+    c = Config.ambiente()
+    assert c.max_tokens_resposta == 2048 and c.timeout == 45 and c.recursion_limit == 64
+    monkeypatch.delenv('LLM_MAX_TOKENS')
+    assert Config.ambiente().max_tokens_resposta == 4096  # padrão declarado, não o da lib
+    with Aplicacao(c, ModeloControlado(), EmbeddingControlado(), usar_mcp=False) as a:
+        a.iniciar('Quanto temos de arroz?')
+    log = json.loads(next((tmp_path / 'logs').glob('*.json')).read_text())
+    assert log['parametros']['max_tokens'] == 2048 and log['parametros']['timeout_s'] == 45
+
+
+def test_sem_reducer_o_grafo_real_perde_trajetoria_em_silencio(tmp_path):
+    from demonstrar_reducers import Aplicacao as Real, AplicacaoSemReducer, trajetoria
+    (tmp_path / 'a').mkdir(); (tmp_path / 'b').mkdir()
+    com = trajetoria(Real, tmp_path / 'a', 'Quanto temos de arroz?')
+    sem = trajetoria(AplicacaoSemReducer, tmp_path / 'b', 'Quanto temos de arroz?')
+    assert com['status'] == sem['status'] == 'respondido'      # nenhum erro aparente
+    assert com['n_eventos'] >= 3 and sem['n_eventos'] == 1     # mas a trajetória sumiu
+
+
+def test_revogado_so_aparece_sem_curadoria_e_modelo_nao_pede(tmp_path):
+    from jsonschema import ValidationError as SchemaErro, validate
+    k = Conhecimento(Config(runtime=tmp_path), EmbeddingControlado())
+    com = {r['id'].split(':')[0] for r in k.buscar_documentos('limite antigo aprovação gerente', k=100, limiar=0)}
+    sem = {r['id'].split(':')[0] for r in k.buscar_documentos('limite antigo aprovação gerente', k=100, limiar=0,
+                                                              incluir_revogados=True)}
+    assert 'POL-V1' not in com and 'POL-V1' in sem
+    with pytest.raises(SchemaErro):  # o argumento não existe no contrato da ferramenta
+        validate({'consulta': 'limite', 'incluir_revogados': True}, schema('buscar_documentos'))
+
+
+def test_remocao_cobre_estruturas_e_revela_dado_derivado():
+    from demonstrar_remocao import PISTA, demonstrar
+    r = demonstrar(controlado=True)
+    passos = {p['passo'][0]: p for p in r['passos']}
+    assert passos['3']['pista_de_memoria'] and not passos['4']['pista_de_memoria']
+    thread = r['remocao']['thread_id']
+    assert r['varredura_antes_da_remocao'][thread] and not r['varredura_depois_da_remocao'][thread]
+    assert r['varredura_depois_da_remocao'][PISTA]  # derivado em outra conversa: limitação declarada
+
+
+class RevisorPrefixo(ModeloControlado):
+    """Reproduz o erro real do gemma: cita 'evidencias:<id>' em vez do id exato."""
+    def __init__(self, corrige):
+        self.corrige, self.pareceres = corrige, 0
+    def chamar(self, mensagens, ferramentas, obrigatoria=None, agente='reposicao', **kw):
+        r = super().chamar(mensagens, ferramentas, obrigatoria, agente, **kw)
+        if r['nome'] == 'emitir_parecer':
+            self.pareceres += 1
+            if self.pareceres == 1 or not self.corrige:
+                r['argumentos']['fontes'] = ['evidencias:' + f for f in r['argumentos']['fontes']]
+        return r
+
+
+def test_revisor_corrige_id_de_fonte_uma_vez(tmp_path):
+    modelo = RevisorPrefixo(corrige=True)
+    with app(tmp_path, modelo) as a:
+        r = a.iniciar('O sal de 1kg tá no fim, registra a reposição.')
+        assert r.status == 'criada' and quantidade(a.servico) == 1 and modelo.pareceres == 2
+
+
+def test_revisor_que_insiste_no_id_errado_reprova(tmp_path):
+    modelo = RevisorPrefixo(corrige=False)
+    with app(tmp_path, modelo) as a:
+        r = a.iniciar('O sal de 1kg tá no fim, registra a reposição.')
+        assert r.status == 'recusado' and quantidade(a.servico) == 0 and modelo.pareceres == 2
+
+
+def test_triagem_null_e_ausente_mas_intencao_continua_estrita():
+    from contratos import Interpretacao
+    from pydantic import ValidationError
+    i = Interpretacao.model_validate({'intencao': 'reposicao', 'produto': None, 'relato_falta': None})
+    assert i.produto == '' and i.relato_falta is False
+    for ruim in ({'intencao': None}, {'intencao': 'comprar'}, {'intencao': 'consulta', 'produto': 5},
+                 {'intencao': 'consulta', 'extra': 'x'}):
+        with pytest.raises(ValidationError):
+            Interpretacao.model_validate(ruim)
+
+
+class TriagemNula(ModeloControlado):
+    def chamar(self, mensagens, ferramentas, obrigatoria=None, **kw):
+        r = super().chamar(mensagens, ferramentas, obrigatoria, **kw)
+        if obrigatoria == 'extrair_intencao' and not r['argumentos']['produto']:
+            r['argumentos'] = {'intencao': 'reposicao', 'produto': None}
+        return r
+
+
+def test_entrada_incompleta_com_null_pergunta_o_produto(tmp_path):
+    with app(tmp_path, TriagemNula()) as a:
+        r = a.iniciar('Preciso repor.')
+        assert r.status == 'esclarecimento' and r.perguntas and quantidade(a.servico) == 0

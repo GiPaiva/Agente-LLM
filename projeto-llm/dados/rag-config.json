@@ -3,6 +3,6 @@
   "limiar": 0.45,
   "calibrado": true,
   "embedding": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-  "quando": "2026-10-16T20:58:23.656684-03:00",
+  "quando": "2026-10-18T21:10:35.676264-03:00",
   "dataset": "dados/perguntas-rag.json:calibracao"
 }

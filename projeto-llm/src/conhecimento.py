@@ -114,7 +114,9 @@ class Conhecimento:
         norma = np.linalg.norm(a) * np.linalg.norm(b)
         return float(np.dot(a, b) / norma) if norma else 0.0
 
-    def buscar_documentos(self, consulta: str, fornecedor: str = "", k=None, limiar=None):
+    def buscar_documentos(self, consulta: str, fornecedor: str = "", k=None, limiar=None, incluir_revogados=False):
+        # incluir_revogados existe só para a avaliação (§4.2); não está no schema da
+        # ferramenta, então o modelo não consegue pedir documento revogado.
         self.indexar()
         vetor = self.embedding.vetores([consulta])[0]
         with self.conectar() as con:
@@ -122,7 +124,7 @@ class Conhecimento:
         candidatos = []
         for r in rows:
             meta = json.loads(r["metadados"])
-            if meta["status"] != "vigente" or meta["vigencia"] > agora().date().isoformat():
+            if not incluir_revogados and (meta["status"] != "vigente" or meta["vigencia"] > agora().date().isoformat()):
                 continue
             if fornecedor and meta.get("fornecedor") not in (None, fornecedor):
                 continue

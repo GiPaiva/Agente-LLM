@@ -1,6 +1,6 @@
 """Contratos públicos: texto entra; um objeto validado sai, inclusive na recusa."""
 from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class Contrato(BaseModel):
@@ -18,6 +18,14 @@ class Interpretacao(Contrato):
     produto: str = ""
     relato_falta: bool = False
     pergunta: str = ""
+
+    # Modelos locais dizem "não informado" com null (medido: gemma em "Preciso
+    # repor."). Para os opcionais, null e o padrão significam o mesmo; a intenção
+    # continua obrigatória e estrita.
+    @field_validator("produto", "relato_falta", "pergunta", mode="before")
+    @classmethod
+    def nulo_e_ausente(cls, valor, info):
+        return cls.model_fields[info.field_name].default if valor is None else valor
 
 
 class RespostaModelo(Contrato):

@@ -62,6 +62,10 @@ def ferramenta_saida(nome, contrato):
 
 
 class Aplicacao:
+    # Tipo do estado como atributo só para a demonstração do §7.2 trocar um
+    # reducer (src/demonstrar_reducers.py); o sistema entregue usa sempre Estado.
+    estado_tipo = Estado
+
     def __init__(self, config=None, modelo=None, embedding=None, multi=True, usar_mcp=True):
         self.config = config or Config.ambiente()
         self.servico = Servico(self.config.runtime, self.config.aprovacao_horas)
@@ -123,8 +127,12 @@ class Aplicacao:
             return "teto de processamento ativo"
         return None
 
-    def _prompt(self, nome):
-        return (RAIZ / "src" / "prompts" / f"{nome}.md").read_text()
+    def _prompt(self, nome, **campos):
+        # Prompts são arquivos versionados (§2.2); campos só preenchem {marcadores}.
+        texto = (RAIZ / "src" / "prompts" / f"{nome}.md").read_text()
+        for campo, valor in campos.items():
+            texto = texto.replace("{" + campo + "}", valor)
+        return texto.strip() if campos else texto
 
     def _chamar(self, s, mensagens, tools, obrigatoria=None, agente="reposicao"):
         if limite := self._limite(s):
@@ -196,7 +204,7 @@ class Aplicacao:
                     interpretacao = Interpretacao.model_validate(r["argumentos"]).model_dump()
                     return {**self._contadores(s), "interpretacao": interpretacao, "eventos": eventos}
                 except (ValueError, ValidationError) as erro:
-                    msgs.append({"role": "user", "content": "Corrija o formato estruturado: " + str(erro)[:200]})
+                    msgs.append({"role": "user", "content": self._prompt("correcao-triagem", erro=str(erro)[:200])})
             raise ValueError("Contrato da triagem inválido após uma correção.")
         except Exception as erro:
             return {**self._contadores(s), "erro": str(erro), "eventos": eventos}
@@ -294,7 +302,7 @@ class Aplicacao:
                         return {**self._contadores(s), "eventos": [evento], "saida": self._saida(
                             s, "recusado", "Não tenho base verificável para responder. Consulte o cadastro ou a política vigente.")}
                     return {**self._contadores(s), "eventos": [evento], "correcoes": 1,
-                            "mensagens": [{"role": "user", "content": "Corrija a saída: " + str(erro)[:200]}]}
+                            "mensagens": [{"role": "user", "content": self._prompt("correcao-resposta", erro=str(erro)[:200])}]}
             return {**self._contadores(s), "chamada": r, "eventos": [evento]}
         except Exception as erro:
             return {**self._contadores(s), "erro": str(erro),
@@ -351,7 +359,7 @@ class Aplicacao:
         # Subconjunto de contrato; o revisor não recebe a trajetória nem segredos.
         msgs = [{"role": "system", "content": self._prompt("revisao")}, {"role": "user", "content": json.dumps(
             {"proposta": s["proposta"], "evidencias": s["evidencias"]}, ensure_ascii=False)}]
-        eventos, consultou = [], False
+        eventos, consultou, corrigiu = [], False, False
         fontes = dict(s["evidencias"])
         try:
             while True:
@@ -362,7 +370,13 @@ class Aplicacao:
                 if r["nome"] == "emitir_parecer":
                     parecer = Parecer.model_validate(r["argumentos"]).model_dump()
                     if not consultou or (parecer["aprovado"] and (not parecer["fontes"] or not set(parecer["fontes"]) <= set(fontes))):
-                        raise ValueError("Revisor precisa consultar e citar evidências verificadas.")
+                        # Uma correção, como no agente; se insistir, falha fechada (reprova).
+                        if corrigiu:
+                            raise ValueError("Revisor precisa consultar e citar evidências verificadas.")
+                        corrigiu = True
+                        msgs.append({"role": "user", "content": self._prompt("correcao-revisao", ids=", ".join(sorted(fontes)),
+                                     consulta="" if consultou else "Consulte ao menos uma ferramenta antes do parecer. ")})
+                        continue
                     return {**self._contadores(s), "parecer": parecer, "eventos": eventos}
                 resultado = self._ler(s, r["nome"], r["argumentos"], "revisao")
                 consultou = True
@@ -445,7 +459,7 @@ class Aplicacao:
         return {"saida": saida, "eventos": eventos}
 
     def _compilar(self):
-        g = StateGraph(Estado)
+        g = StateGraph(self.estado_tipo)
         for nome, func in [("interpretar", self._interpretar), ("coletar", self._coletar),
                 ("agente", self._agente), ("ferramentas", self._ferramentas), ("validar", self._validar),
                 ("revisar", self._revisar), ("preparar", self._preparar), ("aprovar", self._aprovar),
@@ -518,7 +532,9 @@ class Aplicacao:
         pasta.mkdir(exist_ok=True)
         registro = {"quando": agora().isoformat(), "evento": evento, "modo": self.modelo.modo,
             "modelo": self.modelo.nome, "multiagente": self.multi, "mcp": bool(self.mcp),
-            "versao": versao(), "parametros": {"temperature": 0, "max_tokens": 800,
+            "versao": versao(), "parametros": {"temperature": self.config.temperatura, "max_tokens": self.config.max_tokens_resposta,
+                "timeout_s": self.config.timeout, "max_segundos": self.config.max_segundos,
+                "max_modelo": self.config.max_modelo, "max_ferramentas": self.config.max_ferramentas,
                 "recursion_limit": self.config.recursion_limit, "rag": self.conhecimento.parametros},
             "thread_id": estado["thread_id"], "caso_id": estado["caso_id"], "entrada": estado["texto"],
             "metricas": self._contadores(estado), "saida": estado.get("saida"),

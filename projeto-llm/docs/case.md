@@ -439,3 +439,91 @@ troca está escrita em [`modelos.md`](modelos.md) §3.4 — com gatilho numéric
 mínimo. É uma regra simples, determinística e declarada — não é erro do modelo —,
 mas superestima a compra de produto com giro muito irregular. Está em código
 (`FATOR_REPOSICAO`), visível e fácil de trocar quando houver dado real de giro.
+
+---
+
+## 12. O complemento do case — o que o domínio ensinou (Parte 2, item 0)
+
+> **De onde vem o que está aqui.** Não houve trabalho de campo numa loja (ver
+> §11). O que segue saiu de três fontes, e cada item diz qual: **(C)** o corpus
+> de regras que o grupo escreveu para a Parte 2 (`dados/corpus/`); **(L)** os
+> logs e as falhas medidas na Parte 1 e na Parte 2 (`logs/`); **(D)** os
+> desenhos de `ideia-evolucao/`. Nada aqui é depoimento inventado.
+
+### 12.1 O vocabulário que ninguém de fora entende
+
+| Termo | O que significa no case | Por que confunde |
+|---|---|---|
+| **gôndola × depósito** | a gôndola é a prateleira da loja; o depósito é o estoque atrás. O estoque **cadastrado** soma os dois. (C: `CONF-V1`) | "acabou" quase sempre quer dizer "acabou na gôndola". É a origem da família 2. |
+| **estoque mínimo × pedido mínimo** | o estoque mínimo é da **loja**, por produto: abaixo dele, repõe. O pedido mínimo é do **fornecedor**, por pedido: abaixo dele, o fornecedor não atende. (C: `POL-V2 §3`, `FORN-A-V1 §1`) | os dois se chamam "mínimo". Arroz: mínimo 30, mas o pedido sai com 50 por causa do fornecedor. (L: a armadilha 48 × 50 da Parte 1) |
+| **teto de aprovação × saldo** | o teto é R$ 500: acima dele, o gerente precisa aprovar. O saldo é o orçamento que resta: **ninguém** passa dele, nem o gerente. (C: `POL-V2 §1–2`) | são dois limites diferentes e o segundo não tem exceção. A Parte 1 tratava os dois como uma regra só. |
+| **solicitação × pedido** | o sistema cria uma **solicitação** local e debita o orçamento. O **pedido** ao fornecedor é outra etapa, que o sistema nunca faz. (C: `POL-V2 §1`) | "pede mais" na boca do operador é pedido; para o sistema, é solicitação. |
+| **embalagem faz parte do produto** | "açúcar" não é um produto: Açúcar 1kg e Açúcar 5kg são SKUs diferentes, com mínimo e situação opostos (22/20 e 9/15). (L: família 5) | quem é de fora acha que "açúcar" basta. |
+| **recebimento parcial / avaria** | aceitar a parte boa de uma carga com produtos danificados, que ficam fora do estoque disponível até a conferência. (C: `FORN-A-V1 §2`) | parece "recusar a carga", mas é aceitar parte dela. |
+| **vigente × revogado** | a política de compras mudou (`POL-V1` → `POL-V2`). A antiga continua na pasta, mas não vale. (C) | um documento obsoleto parece tão autoritativo quanto o atual. Ver [`rag.md`](rag.md) §3. |
+
+### 12.2 As regras que todo mundo da área conhece e nenhum documento registrava
+
+Até a Parte 1 estas regras moravam no prompt ou em constantes do código. Na
+Parte 2 viraram texto do corpus (RAG) ou regra do serviço, e cada uma tem o seu
+lugar declarado:
+
+1. **Pergunta não é pedido.** "Quanto temos de arroz?" com o arroz abaixo do
+   mínimo continua sendo consulta, e não cria compra. Vive na triagem
+   (`src/prompts/triagem.md`) e no serviço, que exige `intencao == "reposicao"`
+   (`src/servico.py`, `preparar`). (L: família 4)
+2. **O relato não altera o cadastro.** Se o operador diz que acabou e o banco
+   diz 85, o sistema relata os dois lados e não "corrige" o estoque. (C: `CONF-V1`)
+3. **O silêncio nunca autoriza.** Uma aprovação pendente expira em 24 h, e a
+   expiração é **rejeição**, não aprovação tácita. (C: `POL-V2 §4`) Ver [`humano.md`](humano.md).
+4. **O preço vem do cadastro, nunca da conversa.** Nem o operador nem o modelo
+   informam preço. (C: `FORN-B-V1`) O serviço revalida preço e fornecedor no
+   momento da escrita.
+
+### 12.3 A exceção que aparece um caso a cada vinte e decide a arquitetura
+
+**O relato de falta com estoque alto** (refrigerante: "acabou", e o banco
+mostra 85 contra mínimo 20). É a única situação do conjunto rotulado que um
+`if estoque < minimo` responde **errado**: compraria às cegas ou responderia
+"não precisa" sem explicar. Ela decidiu três coisas da arquitetura:
+
+- a triagem extrai `relato_falta` como campo separado da intenção (`src/contratos.py`, `Interpretacao`);
+- o portão `validar` reescreve a resposta quando `relato_falta` e estoque acima
+  do mínimo coincidem: o texto de divergência é **código**, não fica à mercê do
+  modelo (`src/grafo.py`, `_validar`);
+- a memória episódica guarda o campo `divergencia`, para que a próxima consulta
+  do mesmo operador traga o episódio como contexto.
+
+Duas outras exceções do corpus entram no conjunto de perguntas do RAG: o gerente
+pode **reduzir** a quantidade quando o saldo não basta (`POL-V2 §2`), o que
+virou a **aprovação editável** do human-in-the-loop; e o recebimento parcial de
+carga avariada (`FORN-A-V1 §2`).
+
+### 12.4 Os passos que pareciam um e são vários
+
+**"Repor"** parecia um passo, "registrar a compra". São cinco, e cada um tem dono:
+
+```
+"pede mais arroz"
+  1. qual produto, qual embalagem?        triagem (modelo) + consultar_estoque (código)
+  2. falta de verdade, ou só na gôndola?  validar (código) com relato_falta
+  3. quanto? 2×mínimo − atual, elevado ao pedido mínimo do fornecedor
+                                          calcular_reposicao (código)
+  4. quem autoriza? ≤ R$ 500 automático; > R$ 500 → gerente, que pode reduzir
+                                          preparar → aprovar (interrupt)
+  5. registrar a SOLICITAÇÃO (não o pedido), uma única vez
+                                          escrever (código, idempotente)
+```
+
+**"Aprovar"** também parecia um clique e são três: ver a ação com argumentos e
+consequência; opcionalmente corrigir a quantidade; e fazer isso **dentro do
+prazo**, senão a pendência expira.
+
+### 12.5 O que mudou no case entre a Parte 1 e a Parte 2
+
+| Na Parte 1 | Na Parte 2 | Por quê |
+|---|---|---|
+| a compra acima de R$ 500 era **gravada** com status pendente | **nada é gravado** antes da aprovação: o grafo pausa em `aprovar` | uma linha pendente no banco é efeito colateral; o `interrupt` + checkpoint não é |
+| o teto de R$ 500 era constante no código e frase no prompt | é regra do corpus (`POL-V2`), recuperada por RAG, e o serviço a reaplica | o conhecimento de domínio tem dono e versão; o código só confere |
+| não havia dado de pessoa | a memória guarda o **identificador do operador** (episódios e fatos) | daí a remoção com cobertura em [`memoria.md`](memoria.md) §5. O §9 acima continua valendo para o catálogo, mas não para a memória. |
+| o modelo podia chamar a escrita, liberada por fase | o modelo **não tem** ferramenta de escrita; só o código escreve, com capacidade privada | ver [`arquitetura.md`](arquitetura.md) §4 |

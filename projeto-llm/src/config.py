@@ -46,10 +46,15 @@ class Config:
     max_modelo: int = 8
     max_ferramentas: int = 8
     max_tokens: int = 60_000
-    max_segundos: float = 300
+    max_segundos: float = 600
     max_contexto_caracteres: int = 24_000  # estimativa conservadora, não tokens
-    timeout: float = 30
+    timeout: float = 120  # por chamada; modelo de raciocínio local leva 14–25 s
+    max_tokens_resposta: int = 4096  # inclui o raciocínio do modelo "thinking"
+    temperatura: float = 0.0
     retries: int = 2
+    # Decisão que virou parâmetro da lib (§6.6): o padrão do LangGraph é 25
+    # supersteps. Declaramos 64 (≈ 8 modelo + 8 ferramentas + nós fixos, com folga)
+    # para que uma mudança do padrão numa atualização não mude o nosso teto.
     recursion_limit: int = 64
     aprovacao_horas: float = 24
     memoria_dias: int = 30
@@ -63,6 +68,12 @@ class Config:
 
     @classmethod
     def ambiente(cls):
+        def numero(nome, padrao, tipo=float):
+            return tipo(os.environ.get(nome) or padrao)
         return cls(runtime=Path(os.environ.get("AGENTE_RUNTIME") or RAIZ / "runtime"),
+                   timeout=numero("LLM_TIMEOUT", cls.timeout),
+                   max_tokens_resposta=numero("LLM_MAX_TOKENS", cls.max_tokens_resposta, int),
+                   temperatura=numero("LLM_TEMPERATURA", cls.temperatura),
+                   max_segundos=numero("AGENTE_MAX_SEGUNDOS", cls.max_segundos),
                    preco_entrada=float(os.environ.get("LLM_PRECO_ENTRADA_USD_MILHAO") or 0),
                    preco_saida=float(os.environ.get("LLM_PRECO_SAIDA_USD_MILHAO") or 0))

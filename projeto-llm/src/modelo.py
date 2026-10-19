@@ -27,9 +27,13 @@ class Modelo:
                                  max_retries=0, timeout=self.config.timeout)
         # Zero-shot com ferramentas e saída estruturada. Impede argumentos livres,
         # mas o schema não garante decisão correta: o serviço valida as compras.
+        # LM Studio só aceita tool_choice none/auto/required (HTTP 400 no nomeado):
+        # forçar uma ferramenta = oferecer só ela com "required". Ver docs/decisoes.md.
+        if obrigatoria:
+            ferramentas = [t for t in ferramentas if t["function"]["name"] == obrigatoria]
         kwargs = {"model": self.nome, "messages": mensagens, "tools": ferramentas,
-                  "temperature": 0, "max_tokens": 800, "parallel_tool_calls": False,
-                  "tool_choice": {"type": "function", "function": {"name": obrigatoria}} if obrigatoria else "required"}
+                  "temperature": self.config.temperatura, "max_tokens": self.config.max_tokens_resposta,
+                  "parallel_tool_calls": False, "tool_choice": "required"}
         inicio = time.monotonic()
         tentativas = min(self.config.retries + 1, max_tentativas)
         for tentativa in range(tentativas):

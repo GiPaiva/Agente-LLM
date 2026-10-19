@@ -61,7 +61,19 @@ def main():
                                   'ok':r[p['campo']]==p['esperado']})
     with k.conectar() as con:
         revogados=[dict(r) for r in con.execute("SELECT id,texto FROM trechos WHERE doc='POL-V1'")]
+    # O que aconteceria sem a curadoria: mesmas perguntas de limite, sem o filtro de vigência.
+    # Limiar 0 mostra a posição e o score da POL-V1, que o limiar sozinho poderia esconder.
+    sem_filtro=[]
+    for pergunta in ('Qual valor exige aprovação do gerente?','Compra de 800 reais precisa de aprovação?',
+                     'Até quanto posso comprar sem aprovação do gerente?'):
+        sem_filtro.append({'pergunta':pergunta,
+            'com_filtro':[(r['id'],r['score']) for r in k.buscar_documentos(pergunta,k=escolhido['k'],limiar=escolhido['limiar'])],
+            'sem_filtro_mesmo_limiar':[(r['id'],r['score'],r['metadados']['status']) for r in
+                k.buscar_documentos(pergunta,k=escolhido['k'],limiar=escolhido['limiar'],incluir_revogados=True)],
+            'sem_filtro_limiar_0':[(r['id'],r['score'],r['metadados']['status']) for r in
+                k.buscar_documentos(pergunta,k=escolhido['k'],limiar=0,incluir_revogados=True)]})
     report={'quando':agora().isoformat(),'versao':versao(),'modo':'embedding_local_real_sem_LLM',
+            'revogado_sem_filtro':sem_filtro,
             'parametros':parametros,'cortes':cortes,'calibracao':ensaios,'avaliacao':avaliacao,
             'acertos':sum(r['ok'] for r in avaliacao),'total':len(avaliacao),
             'documentos_revogados_indexados_mas_filtrados':revogados}

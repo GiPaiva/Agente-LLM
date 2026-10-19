@@ -1,0 +1,19 @@
+Sondagem do LM Studio (2026-10-18), mensagens reais capturadas do grafo
+(commit 28228b6 + correções de E1 não commitadas). tool_choice="required".
+
+ETAPA triagem (src/prompts/triagem.md + ferramenta extrair_intencao), "O sal de 1kg tá no fim, registra a reposição."
+  qwen3-4b-thinking  tool_choice nomeado        -> HTTP 400 Invalid tool_choice type: 'object'. Supported: none, auto, required
+  gemma-4-e4b        tool_choice nomeado        -> HTTP 400 (idem)
+  qwen3-4b-thinking  required  T=0   max 4096   -> tool_calls | 782 tok | 17.7s | reposicao, sal de 1kg, relato_falta=true
+  qwen3-4b-thinking  required  T=0.6 max 4096   -> tool_calls | 3234 tok | 77.6s | idem
+  gemma-4-e4b        required  T=0   max 4096   -> tool_calls | 610 tok | 27.7s | reposicao, Sal de 1kg
+  qwen3-4b-thinking  "Qual a política de garantia de televisores?" -> 736 tok | 24.8s | politica
+  qwen3-4b-thinking  "Quanto temos de arroz?"                      -> 615 tok | 13.8s | consulta
+
+ETAPA decisão (reposicao.md + procedimento.md, evidência estoque:ARROZ_5KG já presente), "Quanto temos de arroz?"
+  qwen3-4b-thinking  T=0   max 4096 (grafo real) -> finish=length | 4095 tok | ~105s | truncado (log runtime, termino=truncado)
+  qwen3-4b-thinking  T=0.6 top_p .95 top_k 20 max 8192 -> tool_calls | 2368 tok | 58s | consultar_estoque{"produto":"arroz"} (repete leitura já feita)
+  qwen3-4b-thinking  T=0.6 top_p .95 top_k 20 max 8192 -> tool_calls | 2792 tok | 71s | consultar_estoque{"produto":"arroz"} (idem)
+  gemma-4-e4b        T=0   max 4096                    -> tool_calls | 528 tok  | 31s | emitir_resposta{"fontes":["estoque:ARROZ_5KG"],"resultado":"Temos 12 unidades de Arroz 5kg.","suficiente":true}
+
+Decisão: gemma-4-e4b como principal (critério de troca declarado em docs/auditoria-parte2.md §3).

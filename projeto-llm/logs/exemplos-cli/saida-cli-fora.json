@@ -1,0 +1,15 @@
+{
+  "modo": "real",
+  "saida": {
+    "resultado": "Atendo consultas de estoque, reposição e políticas de compra deste mercado simulado.",
+    "fontes": [],
+    "suficiente": false,
+    "status": "recusado",
+    "thread_id": "operador-demo:3a0d95ad5d3841e7ab55b54b7f35593f",
+    "caso_id": "197dd8c5e821426cb7b04b845497904f",
+    "perguntas": [],
+    "aprovacao": null,
+    "solicitacao": null,
+    "termino": "recusado"
+  }
+}

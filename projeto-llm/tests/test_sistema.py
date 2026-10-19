@@ -592,3 +592,17 @@ def test_entrada_incompleta_com_null_pergunta_o_produto(tmp_path):
     with app(tmp_path, TriagemNula()) as a:
         r = a.iniciar('Preciso repor.')
         assert r.status == 'esclarecimento' and r.perguntas and quantidade(a.servico) == 0
+
+
+def test_recursion_limit_declarado_vence_o_padrao_da_lib(tmp_path):
+    """Canário do §6.6: o padrão da lib mudou de 25 para 10007; o nosso teto é declarado."""
+    from langgraph.errors import GraphRecursionError
+    from langgraph._internal._config import DEFAULT_RECURSION_LIMIT
+    class S(TypedDict): n: int
+    g = StateGraph(S); g.add_node('a', lambda s: {'n': s['n'] + 1}); g.add_edge(START, 'a')
+    g.add_conditional_edges('a', lambda s: 'a', {'a': 'a'})
+    with app(tmp_path) as a:
+        limite = a._config('x')['recursion_limit']
+    assert limite == 64 and DEFAULT_RECURSION_LIMIT > limite
+    with pytest.raises(GraphRecursionError, match='64'):
+        g.compile().invoke({'n': 0}, {'recursion_limit': limite})

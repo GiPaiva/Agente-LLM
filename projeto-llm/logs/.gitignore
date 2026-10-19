@@ -11,3 +11,19 @@
 
 # Parte 2 — RAG: calibração de k/limiar, os dois cortes e o revogado sem filtro.
 !/rag/20261018-211035.json
+
+# Parte 2 — os 8 cenários com o modelo real (commit 6c48749, árvore limpa) e o
+# ensaio anterior, cujas duas falhas motivaram as decisões 12 e 13.
+!/demonstracoes/real/20261018-212136-726175/*.json
+!/demonstracoes/real/20261018-205831-280653/*.json
+
+# Parte 2 — fora do escopo e o fluxo de aprovação pela CLI (README, io.md).
+!/exemplos-cli/*
+
+# Parte 2 — a regra da frase, a remoção com varredura e os reducers.
+!/prompts/20261018-214539.json
+!/memoria/remocao-real-20261018-214747.json
+!/reducers/demonstracao.json
+
+# Parte 2 — autonomia: leituras que a intenção não prevê (árvore modificada; ver docs/arquitetura.md §3).
+!/autonomia/*

@@ -1,0 +1,34 @@
+{
+  "modo": "real",
+  "saida": {
+    "resultado": "Solicitação criada: 55 unidades; custo R$ 1017.50. Nenhum pedido foi enviado ao fornecedor.",
+    "fontes": [
+      {
+        "id": "estoque:ARROZ_5KG",
+        "tipo": "registro",
+        "trecho": "{\"id\": \"ARROZ_5KG\", \"nome\": \"Arroz 5kg\", \"categoria\": \"mercearia\", \"estoque_atual\": 12, \"estoque_minimo\": 30, \"venda_media_diaria\": 8.0, \"preco_unitario\": 18.5, \"fornecedor_id\": \"FORN_A\", \"abaixo_do_minimo\": true}"
+      },
+      {
+        "id": "calculo:ARROZ_5KG",
+        "tipo": "registro",
+        "trecho": "{\"id\": \"ARROZ_5KG\", \"nome\": \"Arroz 5kg\", \"categoria\": \"mercearia\", \"estoque_atual\": 12, \"estoque_minimo\": 30, \"venda_media_diaria\": 8.0, \"preco_unitario\": 18.5, \"fornecedor_id\": \"FORN_A\", \"pedido_minimo\": 50, \"prazo_dias\": 2, \"produto_id\": \"ARROZ_5KG\", \"precisa_repor\": true, \"quantidade_recomendada\": 50, \"quantidade\": 50, \"custo_estimado\": 925.0, \"orcamento_disponivel\": 1200.0, \"limite_sem_aprovacao\": 500}"
+      }
+    ],
+    "suficiente": true,
+    "status": "criada",
+    "thread_id": "operador-demo:73c23820d6a44568a512188d2bcaab32",
+    "caso_id": "69549390f3204c44beabba080c9cdaeb",
+    "perguntas": [],
+    "aprovacao": null,
+    "solicitacao": {
+      "chave": "3c4a6667435b3b841e6441898a5e237019161b4695114f6491e487a7c15158b3",
+      "produto_id": "ARROZ_5KG",
+      "quantidade": 55,
+      "custo_estimado": 1017.5,
+      "status": "criada",
+      "caso_id": "69549390f3204c44beabba080c9cdaeb",
+      "ja_existia": false
+    },
+    "termino": "criada"
+  }
+}

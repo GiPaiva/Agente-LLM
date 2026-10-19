@@ -81,10 +81,10 @@ deixar de comprar, mas não pode comprar o que não devia.
 
 | Frente | O framework cobre? | O que escrevemos | Onde | Linhas |
 |---|---|---|---|---|
-| **motivo de término** | não: `END` diz que acabou, não por quê | `Saida.termino` + classificação em `_finalizar` (`laco_detectado`, `orcamento_esgotado`, `truncado`, `erro_fatal`) + `_executar` convertendo exceção em `falha` | `src/contratos.py:51`, `src/grafo.py:429-449`, `src/grafo.py:504-519` | ~25 |
-| **detector de laço** | não: `recursion_limit` só limita | a mesma ferramenta com os mesmos argumentos 2× injeta uma observação ("você já fez esta consulta"); 4× encerra com `laco_detectado` | `src/grafo.py:307-326` | 6 |
+| **motivo de término** | não: `END` diz que acabou, não por quê | `Saida.termino` + classificação em `_finalizar` (`laco_detectado`, `orcamento_esgotado`, `truncado`, `erro_fatal`) + `_executar` convertendo exceção em `falha` | `src/contratos.py:59`, `src/grafo.py:439-459`, `src/grafo.py:514-528` | ~25 |
+| **detector de laço** | não: `recursion_limit` só limita | a mesma ferramenta com os mesmos argumentos 2× injeta uma observação ("você já fez esta consulta"); 4× encerra com `laco_detectado` | `src/grafo.py:311-330` | 6 |
 | **tetos** | só passos (`recursion_limit`) | chamadas de modelo (8), ferramentas (8), tokens (60 000), tempo **ativo** (600 s, sem contar a espera humana), e o saldo de tempo repassado ao timeout de cada chamada | `src/grafo.py:100-128`, `src/modelo.py:38-42` | ~32 |
-| **erro recuperável × fatal** | não | 4xx = fatal sem retry (configuração/cota); 5xx e conexão = retry explícito (`max_retries=0` no SDK, para não haver retry escondido); `RegraNegocio` depois de uma decisão humana = recuperável (volta à pausa); resto = fatal | `src/modelo.py:39-51`, `src/grafo.py:146-152`, `src/grafo.py:420-427` | ~23 |
+| **erro recuperável × fatal** | não | 4xx = fatal sem retry (configuração/cota); 5xx e conexão = retry explícito (`max_retries=0` no SDK, para não haver retry escondido); `RegraNegocio` depois de uma decisão humana = recuperável (volta à pausa); resto = fatal | `src/modelo.py:39-52`, `src/grafo.py:150-156`, `src/grafo.py:433-437` | ~23 |
 
 Total: **cerca de 86 linhas** de código que o framework não deu.
 
@@ -103,25 +103,40 @@ Total: **cerca de 86 linhas** de código que o framework não deu.
 ## 5. A decisão que virou parâmetro
 
 **`recursion_limit`.** Na Parte 1, o laço à mão tinha um teto de passos
-**explícito**, justificado pelo orçamento (`docs/arquitetura.md` da Parte 1, §3).
-No LangGraph, essa decisão virou um parâmetro de configuração com padrão **25
-supersteps**, que ninguém precisa escrever.
+**explícito**, justificado pelo orçamento. No LangGraph, essa decisão virou um
+parâmetro de configuração com valor padrão, que ninguém precisa escrever. O
+número que o grupo tinha em mente era **25 supersteps**, o padrão que o
+`langchain_core` ainda declara (`DEFAULT_RECURSION_LIMIT = 25` em
+`langchain_core/runnables/config.py`, no pacote instalado).
+
+**O padrão já mudou, e nós medimos.** Na versão fixada neste repositório
+(`langgraph==1.2.15`), o LangGraph tem o próprio padrão:
+`DEFAULT_RECURSION_LIMIT = int(getenv("LANGGRAPH_DEFAULT_RECURSION_LIMIT",
+"10007"))` (`langgraph/_internal/_config.py:32`). Um grafo em laço infinito,
+invocado sem configuração, só para em **10 007** supersteps. Com
+`recursion_limit=64`, para em 64. A execução das duas variantes está em
+`logs/diagnostico/recursion-limit-padrao.txt`, e o caminho de 64 fica fixado em
+`test_recursion_limit_declarado_vence_o_padrao_da_lib`. É o cenário que o §6.6
+descreve: a biblioteca mudou um padrão, e quem dependia dele perdeu o teto de
+passos sem nenhum aviso. Num modelo local de 30 s por chamada, 10 007 passos
+são dias.
 
 **Por que declaramos 64.** Um pedido com aprovação percorre cerca de 9 nós fixos
 (`interpretar`, `coletar`, `agente`, `validar`, `revisar`, `preparar`,
 `aprovar`, `escrever`, `finalizar`), e o laço `agente ⇄ ferramentas` pode dar
 até 8 voltas (o teto de ferramentas), ou seja, 16 supersteps. Somando a
-reentrada da edição inválida, o pior caso legítimo passa de 25. Com o padrão, uma execução
-legítima longa terminaria em `GraphRecursionError` no lugar do nosso
-`orcamento_esgotado`, que é mais informativo. Por isso 64: acima de qualquer
+reentrada da edição inválida, o pior caso legítimo passa de 25. Com o padrão
+antigo, uma execução legítima longa terminaria em `GraphRecursionError` no
+lugar do nosso `orcamento_esgotado`, que é mais informativo. Com o padrão novo,
+o teto do framework deixa de existir na prática. Por isso 64: acima de qualquer
 caminho legítimo, para que **os nossos tetos disparem antes do teto do
-framework**.
+framework**, e com um teto do framework que continua existindo.
 
-**Se o padrão mudar numa atualização:** nada muda para nós, porque o valor está
-declarado em `src/config.py` (`recursion_limit: int = 64`, com o comentário da
-decisão) e é passado em toda chamada (`Aplicacao._config`). O teste
-`test_config_de_ambiente_e_log_com_parametros_reais` confere o valor, e cada
-log grava `parametros.recursion_limit`.
+**Se o padrão mudar de novo:** nada muda para nós. O valor está declarado em
+`src/config.py` (`recursion_limit: int = 64`, com o comentário da decisão), é
+passado em toda chamada (`Aplicacao._config`) e é gravado em cada log
+(`parametros.recursion_limit`). O teste canário falha se o padrão da biblioteca
+voltar a ficar abaixo de 64, ou se o nosso valor deixar de ser aplicado.
 
 **Outras decisões que viraram parâmetro, também declaradas:**
 - o reducer de `mensagens`: o `add_messages` do LangGraph deduplica por id,

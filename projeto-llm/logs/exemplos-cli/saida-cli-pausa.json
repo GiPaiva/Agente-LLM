@@ -1,0 +1,45 @@
+{
+  "modo": "real",
+  "saida": {
+    "resultado": "O gerente precisa revisar esta solicitação antes da compra.",
+    "fontes": [
+      {
+        "id": "estoque:ARROZ_5KG",
+        "tipo": "registro",
+        "trecho": "{\"id\": \"ARROZ_5KG\", \"nome\": \"Arroz 5kg\", \"categoria\": \"mercearia\", \"estoque_atual\": 12, \"estoque_minimo\": 30, \"venda_media_diaria\": 8.0, \"preco_unitario\": 18.5, \"fornecedor_id\": \"FORN_A\", \"abaixo_do_minimo\": true}"
+      },
+      {
+        "id": "calculo:ARROZ_5KG",
+        "tipo": "registro",
+        "trecho": "{\"id\": \"ARROZ_5KG\", \"nome\": \"Arroz 5kg\", \"categoria\": \"mercearia\", \"estoque_atual\": 12, \"estoque_minimo\": 30, \"venda_media_diaria\": 8.0, \"preco_unitario\": 18.5, \"fornecedor_id\": \"FORN_A\", \"pedido_minimo\": 50, \"prazo_dias\": 2, \"produto_id\": \"ARROZ_5KG\", \"precisa_repor\": true, \"quantidade_recomendada\": 50, \"quantidade\": 50, \"custo_estimado\": 925.0, \"orcamento_disponivel\": 1200.0, \"limite_sem_aprovacao\": 500}"
+      }
+    ],
+    "suficiente": true,
+    "status": "aguardando_aprovacao",
+    "thread_id": "operador-demo:73c23820d6a44568a512188d2bcaab32",
+    "caso_id": "69549390f3204c44beabba080c9cdaeb",
+    "perguntas": [],
+    "aprovacao": {
+      "acao": "registrar_compra",
+      "caso_id": "69549390f3204c44beabba080c9cdaeb",
+      "produto": "Arroz 5kg",
+      "fornecedor": "FORN_A",
+      "quantidade": 50,
+      "custo_estimado": 925.0,
+      "orcamento": 1200.0,
+      "motivo": "Valor acima de R$ 500 ou quantidade precisa de ajuste ao saldo",
+      "consequencia": "Criar uma solicitação local e debitar o orçamento; nenhum envio externo.",
+      "respostas": [
+        "aprovar",
+        "rejeitar"
+      ],
+      "editavel": [
+        "quantidade"
+      ],
+      "erro_validacao_anterior": null,
+      "expira": "2026-10-19T21:51:18.961322-03:00"
+    },
+    "solicitacao": null,
+    "termino": "aguardando_aprovacao"
+  }
+}

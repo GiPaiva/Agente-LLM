@@ -52,9 +52,10 @@ class Config:
     max_tokens_resposta: int = 4096  # inclui o raciocínio do modelo "thinking"
     temperatura: float = 0.0
     retries: int = 2
-    # Decisão que virou parâmetro da lib (§6.6): o padrão do LangGraph é 25
-    # supersteps. Declaramos 64 (≈ 8 modelo + 8 ferramentas + nós fixos, com folga)
-    # para que uma mudança do padrão numa atualização não mude o nosso teto.
+    # Decisão que virou parâmetro da lib (§6.6). langchain_core declara 25, mas o
+    # langgraph==1.2.15 fixado usa o próprio padrão, 10007 (medido em
+    # logs/diagnostico/recursion-limit-padrao.txt), o que na prática remove o teto. Declaramos 64 (nós fixos + 8 voltas
+    # agente⇄ferramentas, com folga) para que os nossos tetos disparem antes.
     recursion_limit: int = 64
     aprovacao_horas: float = 24
     memoria_dias: int = 30

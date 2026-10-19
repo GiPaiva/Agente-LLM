@@ -353,3 +353,82 @@ divergência, que é o que o contrato de saída exige. Bastaria acrescentar `"na
 a aula 03 chama de teste que não testa nada, e seria a terceira vez neste
 documento em que um verificador frouxo aprova o comportamento errado. O caso
 fica como falha declarada, e o número fica 95%.
+
+---
+
+# Parte 2 — as decisões da consolidação
+
+> Partida: commit `1c56c89` (código da Parte 2 integrado, nunca rodado com
+> modelo real). Diagnóstico completo em [`auditoria-parte2.md`](auditoria-parte2.md).
+
+## Decisão 10 — `tool_choice` nomeado virou "só a ferramenta + `required`"
+
+**O que mudou.** Para forçar a triagem a responder por `extrair_intencao`, o
+código mandava `tool_choice={"type":"function","function":{"name":...}}`. O
+LM Studio responde **HTTP 400** a isso (`Supported string values: none, auto,
+required`). A primeira execução real morreu na primeira chamada
+(`logs/diagnostico/antes-correcao-tool-choice.json`). Agora, quando uma
+ferramenta é obrigatória, só ela é oferecida, com `tool_choice="required"`.
+O efeito é o mesmo, e a forma é aceita por qualquer servidor compatível.
+
+**Por que nenhum teste pegou.** O teste de SDK usava um servidor falso que
+aceitava qualquer `tool_choice`. O teste novo
+(`test_ferramenta_obrigatoria_sem_tool_choice_nomeado`) usa um falso que
+**recusa** o nomeado, como o real.
+
+## Decisão 11 — `max_tokens`, timeout e temperatura saíram do código
+
+`max_tokens=800` e `temperature=0` estavam escritos em `src/modelo.py`, e o
+log gravava `"max_tokens": 800` fixo, mesmo que o valor mudasse. Agora vêm de
+`Config` (com `LLM_MAX_TOKENS`, `LLM_TIMEOUT`, `LLM_TEMPERATURA`,
+`AGENTE_MAX_SEGUNDOS` no `.env.example`), e o log grava o valor em uso. A razão
+foi medida: um modelo de raciocínio gasta 600–4 000 tokens pensando (ver o
+adendo de [`modelos.md`](modelos.md)).
+
+## Decisão 12 — o revisor ganhou uma correção, como o agente
+
+No primeiro ensaio real, o revisor (gemma) consultou o cadastro e aprovou,
+mas citou `"evidencias:estoque:SAL_1KG"`: o nome da chave do JSON como
+prefixo do id. O código reprovou **sem chance de correção**, e a compra
+legítima de sal virou recusa. Duas mudanças: o prompt `revisao.md` diz qual é
+o id exato, e o revisor recebe **uma** mensagem de correção com a lista de ids
+válidos (`src/prompts/correcao-revisao.md`). Se errar de novo, continua
+reprovando. Os dois lados ficam fixados por
+`test_revisor_corrige_id_de_fonte_uma_vez` e
+`test_revisor_que_insiste_no_id_errado_reprova`.
+
+## Decisão 13 — `null` na triagem vale como ausente
+
+No mesmo ensaio, *"Preciso repor."* virou `falha`: o gemma disse "sem produto"
+com `"produto": null`, e o contrato estrito só aceitava string, inclusive na
+segunda tentativa. Para os campos **opcionais** de `Interpretacao`, `null` e o
+padrão significam o mesmo, e passaram a ser tratados assim. A `intencao`
+continua obrigatória, estrita e fechada no `Literal`
+(`test_triagem_null_e_ausente_mas_intencao_continua_estrita`). Afrouxar o
+contrato inteiro esconderia erro de verdade.
+
+## Decisão 14 — as mensagens de correção viraram arquivos
+
+Três mensagens enviadas ao modelo ("corrija o formato…") viviam em f-strings
+no `grafo.py`. Elas são prompt, e foram para `src/prompts/correcao-*.md`, com
+marcadores `{erro}`, `{ids}` e `{consulta}` preenchidos por `_prompt`.
+
+## Decisão 15 — a frase que não fazia nada saiu
+
+*"Pergunta apenas informativa é consulta, mesmo com estoque baixo."* saiu de
+`triagem.md` depois da ablação: 22/22 com e sem ela. Ela falava de estoque
+para uma etapa que não vê o estoque. Ver [`prompts.md`](prompts.md) §3.
+
+## Decisão 16 — o modelo continua o gemma
+
+O `qwen3-4b-thinking` foi medido e descartado pelo critério escrito antes de
+rodar. Ver o adendo de [`modelos.md`](modelos.md).
+
+## Decisão 17 — o que **não** mudamos
+
+- **O caso 3 continua resolvido pelo código** (ver `arquitetura.md` §3).
+- **O corte por estrutura continua**, mesmo com o corte por caracteres
+  acertando 1 pergunta a mais no top-3 da calibração (ver `rag.md` §4.1).
+- **A demonstração de remoção revelou dado derivado** que sobrevive em outra
+  conversa. Declaramos a limitação (`memoria.md` §5) em vez de implementar uma
+  remoção por usuário nesta rodada.

@@ -64,3 +64,44 @@ Os três candidatos comparados em [`modelos.md`](modelos.md). Todos foram
 - **Dados de supermercado real.** Não tivemos acesso a uma loja parceira no
   prazo. Os dados são simulados e declarados como tal (case §8), e a linha de
   base do ganho é uma **estimativa declarada**, não uma medição (case §5 e §11).
+
+---
+
+## 6. Parte 2 — o que foi acrescentado
+
+### Material da disciplina
+
+| Fonte | Para que serviu |
+|---|---|
+| `trabalhos/02-segunda-entrega.md` | o enunciado da Parte 2, itens 0 a 10; [`entrega.md`](entrega.md) mapeia cada item |
+| `notas-aula/aula06-embeddings-e-rag/` (`02-chunking.py`, `03-buscador.py`, `estrategias_chunking.py`) | as estratégias de corte comparadas em `rag.md` §4 e a busca por cosseno |
+| `notas-aula/aula07-rag-e-documentos/` (`03-recuperacao-como-ferramenta.py`, `06-citacao-e-recusa.py`, `05-modos-de-falha.py`) | a recuperação como ferramenta, a citação conferida em código e a recusa com portão de limiar |
+| `notas-aula/aula08-memoria/` (`01-checkpoint-vs-memoria.py`, `02-memoria-*.py`, `03-quem-escreve.py`, `04-esquecer-*.py`) | a fronteira checkpoint × memória, as três memórias, a política de escrita e as três causas de esquecimento de `memoria.md` |
+| `notas-aula/aula09-framework/` (`04-langgraph.py`, `11-estado-checkpointers.py`, `13-human-in-the-loop.py`) | `StateGraph`, reducer, `SqliteSaver`, `interrupt` + `Command(resume=...)` |
+| `notas-aula/aula10-mcp/` | o servidor MCP de estoque e o cliente stdio (`src/servidor_mcp.py`, `src/transporte.py`) |
+
+### Documentação técnica (versões fixadas em `requirements.txt`, instaladas e usadas)
+
+> A coluna da direita separa o que foi **lido na documentação** do que foi
+> **observado em execução** ou no fonte instalado. Nesta rodada, nenhuma
+> documentação online foi aberta: o que está aqui foi usado e testado.
+
+| Fonte | Versão | Conferido ao vivo? |
+|---|---|---|
+| LangGraph — <https://langchain-ai.github.io/langgraph/> (grafo, reducers, `interrupt`, `recursion_limit`) | `langgraph==1.2.15` | **documentação online não consultada nesta rodada**; o uso seguiu `notas-aula/aula09-framework/`. Conferido no **fonte instalado** e em execução: o padrão de `recursion_limit` é 10007 (`logs/diagnostico/recursion-limit-padrao.txt`) e o `InvalidUpdateError` do ramo paralelo (`logs/reducers/demonstracao.json`) |
+| `langgraph-checkpoint-sqlite` — <https://pypi.org/project/langgraph-checkpoint-sqlite/> | `3.1.2` | usado; documentação online não consultada. Comportamento testado: a pausa sobrevive ao fim do processo |
+| FastEmbed — <https://github.com/qdrant/fastembed> | `fastembed==0.9.0` | usado; documentação online não consultada. Observado: o modelo `paraphrase-multilingual-MiniLM-L12-v2` é baixado no primeiro uso |
+| Model Context Protocol, SDK Python — <https://github.com/modelcontextprotocol/python-sdk> | `mcp==1.30.0` | usado, seguindo `notas-aula/aula10-mcp/`; documentação online não consultada |
+| LM Studio, API compatível com OpenAI — <https://lmstudio.ai/docs/app/api/endpoints/openai> | LM Studio local | **documentação não consultada**; o comportamento foi **observado em execução**: a recusa ao `tool_choice` nomeado, com a mensagem do servidor, está em `logs/diagnostico/` |
+| Pydantic — <https://docs.pydantic.dev/> (`strict`, `extra="forbid"`, `field_validator`) | `pydantic==2.14.1` | usado; documentação online não consultada. O comportamento de `strict`/`field_validator` está coberto por teste |
+| Cartão do modelo `Qwen3-4B-Thinking-2507` — <https://huggingface.co/Qwen/Qwen3-4B-Thinking-2507> | — | **não consultado nesta rodada**; os valores de amostragem testados (`temperature=0.6`, `top_p=0.95`, `top_k=20`) são os que o grupo tinha como recomendação para os modelos de raciocínio Qwen3, **sem conferir no cartão**. Foram testados e descartados (`modelos.md`, adendo) |
+
+### O que mudou nas seções 3 e 4
+
+O SDK `openai` da Parte 2 é o `3.32.0` (`requirements.txt`), e não o `3.16.2` da
+Parte 1.
+
+
+O servidor local da Parte 2 é o LM Studio na própria máquina
+(`http://127.0.0.1:1234/v1`), sem túnel. Os candidatos hospedados não foram
+remedidos nesta parte.

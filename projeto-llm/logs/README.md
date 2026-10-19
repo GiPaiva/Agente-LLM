@@ -1,5 +1,36 @@
 # O que há em `logs/`
 
+## Parte 2 — as evidências citadas nos documentos
+
+Todo log de execução grava `versao.commit`, `versao.working_tree_modificado`, o
+sha256 de cada arquivo de `src/` e `dados/` (inclusive cada prompt), o modelo,
+os parâmetros em uso e a trajetória (`eventos`). Salvo indicação, as
+evidências abaixo foram geradas no **commit `6c48749` com a árvore limpa**,
+com `google/gemma-4-e4b` no LM Studio local.
+
+| Pasta | O que é | Citado em | Como reproduzir |
+|---|---|---|---|
+| `demonstracoes/real/20261018-212136-726175/` | **os 8 cenários** (os 6 casos do §9 + incompleta + ambígua), via MCP, 8/8; `demonstracoes.json` resume os checks | `docs/io.md`, `README.md` | `python src/main.py --demo` |
+| `demonstracoes/real/20261018-205831-280653/` | o **ensaio** anterior ao congelamento (6/8): as duas falhas, revisor citando `evidencias:<id>` e triagem com `produto: null`, que viraram as decisões 12 e 13. Gerado antes do commit `6c48749` | `docs/decisoes.md` | — (histórico) |
+| `exemplos-cli/` | fora do escopo e o fluxo de aprovação **pela CLI**: pausa, operador barrado, gerente edita, 2ª aprovação. `saida-cli-*.json` é a saída de tela | `README.md`, `docs/io.md`, `docs/humano.md` | os comandos do README |
+| `rag/20261018-211035.json` | calibração de k/limiar, os dois cortes, a avaliação 10/10 e o revogado sem filtro. Gerado com o código de `6c48749`, minutos antes do commit | `docs/rag.md` | `python src/avaliar_rag.py` |
+| `prompts/20261018-214539.json` | a regra da frase: triagem com e sem a frase, 22/22 nas duas | `docs/prompts.md` | ver `docs/prompts.md` §3 |
+| `memoria/remocao-real-20261018-214747.json` | remoção com varredura de todas as estruturas | `docs/memoria.md` §5 | `python src/demonstrar_remocao.py` |
+| `reducers/demonstracao.json` | o que acontece sem reducer: paralelo (erro) × grafo real (perda silenciosa) | `docs/arquitetura.md` §5.2 | `python src/demonstrar_reducers.py` |
+| `autonomia/` | três pedidos em que a leitura necessária não sai da intenção (o modelo escolhe `consultar_fornecedor`, ou deixa de buscar a exceção). Gerados depois do congelamento (`working_tree_modificado: true`; o `sha256_fontes` identifica o código) | `docs/arquitetura.md` §3, `docs/rag.md` §5 | `python src/main.py "<pedido>"` |
+| `diagnostico/` | a falha do `tool_choice` nomeado antes da correção, a sondagem qwen × gemma, e o padrão de `recursion_limit` da lib (10007) | `docs/auditoria-parte2.md`, `docs/modelos.md` | — (histórico) |
+
+Logs novos ficam locais por padrão (`logs/.gitignore`). Para publicar uma
+evidência, libere o caminho exato no `.gitignore` e cite-a num documento.
+
+---
+
+## Parte 1 — a evidência da primeira entrega
+
+As pastas abaixo são da Parte 1, do laço à mão anterior ao LangGraph. Elas
+sustentam `docs/modelos.md` §3 e `docs/decisoes.md`, decisões 1–9. O formato
+de log descrito daqui em diante é o da Parte 1.
+
 Toda execução do agente grava a **trajetória completa** (item 4.1 da entrega):
 ferramenta, argumentos, resultado, erro de cada passo, o motivo do término e o
 carimbo `prompt × modelo × parâmetros`.

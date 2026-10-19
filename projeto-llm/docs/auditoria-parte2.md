@@ -41,25 +41,39 @@ O log da falha está em `logs/diagnostico/antes-correcao-tool-choice.json`.
 
 ## 3. Decisões tomadas nesta rodada
 
-- **Modelo principal: `qwen/qwen3-4b-thinking-2507`**, com o `google/gemma-4-e4b` da Parte 1 como alternativa (ver `modelos.md`, adendo da Parte 2). Critério de troca, escrito antes de rodar: se o qwen falhar em 2 ou mais dos 8 cenários por formato ou tempo, a demonstração vai para o gemma.
-- **`temperature=0`**, apesar de o cartão do modelo sugerir amostragem. Na sondagem, `0.6` levou o raciocínio de 782 para 3.234 tokens e de 18 s para 78 s, sem mudar a resposta.
-- **Caso 3 (registro inexistente) continua resolvido pelo código**, não pelo modelo. A defesa está em `arquitetura.md` §3.2.
+- **Modelo: começamos pelo `qwen/qwen3-4b-thinking-2507` e voltamos ao `google/gemma-4-e4b`** da Parte 1. O critério de troca foi escrito antes de rodar: se o qwen falhasse por formato ou tempo, a demonstração iria para o gemma. Ele falhou na etapa de decisão: truncou com 4 095 tokens de raciocínio, e com amostragem levou 58–71 s repetindo uma leitura já feita. Detalhes no adendo de `modelos.md`.
+- **`temperature=0`**, apesar de o cartão do modelo sugerir amostragem. Na sondagem do qwen, `0.6` levou o raciocínio da triagem de 782 para 3.234 tokens e de 18 s para 78 s, sem mudar a resposta. O gemma usa `0` desde a Parte 1.
+- **Caso 3 (registro inexistente) continua resolvido pelo código**, não pelo modelo. A defesa está em `arquitetura.md` §3.
 - **Commits feitos pelo grupo**, não pelo assistente: os logs registram `commit` e `working_tree_modificado`.
 
-## 4. Checklist do enunciado
+## 4. Checklist do enunciado — estado final
 
-Preenchido ao final da rodada — ver §4 atualizada abaixo.
+| Item | Antes | Depois | Onde | Evidência |
+|---|---|---|---|---|
+| 0 case complementado | ❌ | ✅ | `docs/case.md` §12 | — |
+| 1 entrada = texto; saída validada (resultado, fonte, suficiência); ≥3 exemplos reais com commit, data e log; incompleta, ambígua e fora do escopo | ❌ | ✅ | `docs/io.md`, `src/contratos.py` | 9 execuções reais citadas, commit `6c48749` |
+| 2 plano de prompts; prompts em arquivo; regra da frase | ❌ | ✅ | `docs/prompts.md`, `src/prompts/` | `logs/prompts/20261018-214539.json`: 22/22 com e sem; a frase saiu |
+| 3 diagrama, 6 perguntas, defesa da autonomia | ⚠️ | ✅ | `docs/arquitetura.md` §1–3 | `n_recuperacoes` por execução (`io.md` §4) |
+| 4 RAG: formas, 10 perguntas, corpus, revogado, corte e k, integração no laço | ❌ | ✅ | `docs/rag.md` | `logs/rag/20261018-211035.json`: 10/10; revogado a 0,011 do limiar sem curadoria |
+| 5 memória: níveis, fronteira, 3 memórias, escrita idempotente, esquecimento, conversa | ❌ | ✅ | `docs/memoria.md` | `logs/memoria/remocao-real-20261018-214747.json` |
+| 6 grafo: desenho × `conferir_grafo.py`, padrões, quem decide, o que o framework não deu, parâmetro | ⚠️ | ✅ | `docs/grafo.md`, `docs/arquitetura.md` §1.1, `conferir_grafo.py` | o padrão de `recursion_limit` é **10007** na versão fixada (não 25), coberto pelo teste canário |
+| 7 estado: tabela, reducers, o que acontece sem eles, o que não está no estado | ⚠️ | ✅ | `docs/arquitetura.md` §5 | `logs/reducers/demonstracao.json`: grafo real perde 3 de 4 eventos sem erro |
+| 8 HITL: interrupt + checkpointer + resume, aprovar/rejeitar/editar, prazo, idempotência | ❌ | ✅ | `docs/humano.md` | `io.md` exemplo 6; `logs/exemplos-cli/` |
+| 9 seis casos com log | ❌ | ✅ | `docs/io.md` §3–4 | `logs/demonstracoes/real/20261018-212136-726175/`: 8/8 |
+| 10 README (rodar em <5 min, usar, exemplo, pausa), requirements fixado, `.env.example` sem valores | ⚠️ | ✅ | `README.md` | do clone limpo à 1ª resposta real em 43 s, com o cache do pip aquecido |
 
-| Item | Antes | Depois | Onde |
-|---|---|---|---|
-| 0 case complementado | ❌ | | `docs/case.md` §12 |
-| 1 entrada/saída + exemplos reais | ❌ | | `docs/io.md` |
-| 2 plano de prompts + frase | ❌ | | `docs/prompts.md` |
-| 3 arquitetura | ⚠️ | | `docs/arquitetura.md` |
-| 4 RAG | ❌ | | `docs/rag.md` |
-| 5 memória | ❌ | | `docs/memoria.md` |
-| 6 grafo + `conferir_grafo.py` | ⚠️ | | `docs/grafo.md` |
-| 7 estado + reducers | ⚠️ | | `docs/arquitetura.md` §5 |
-| 8 human-in-the-loop | ❌ | | `docs/humano.md` |
-| 9 seis casos com log | ❌ | | `logs/parte2/` |
-| 10 README, requirements, .env.example | ⚠️ | | raiz |
+Validação final: `pytest` **52 passed**; `avaliar.py --controlado --n 3`
+**60/60**, sem compra indevida; `conferir_grafo.py` igual ao desenho.
+
+## 5. Riscos residuais
+
+| Risco | Por que fica | Mitigação declarada |
+|---|---|---|
+| **o modelo é pequeno e local** (4B) | escolha de política de dados (`modelos.md` §3.4) | contratos estritos com uma correção, falha fechada, e o serviço revalida tudo; o pior erro do modelo é deixar de comprar, nunca comprar errado |
+| **N=1 por cenário com o modelo real** | cada cenário leva de 11 a 149 s; a suíte de 20 casos × 3 com o modelo real não foi refeita na Parte 2 | a Parte 1 mediu 57/60 com o mesmo modelo, e a integração está coberta por 60/60 com dublê. Próximo passo: `python src/avaliar.py --n 3` |
+| **fluxos com compra levam 2–2,5 min** | 4 chamadas de modelo, a revisão incluída | `--um-agente` desliga o revisor (o portão em código continua); a troca para modelo hospedado custa três variáveis de ambiente |
+| **sem autenticação real do gerente** | o perfil é um argumento de CLI | declarado em `humano.md` §1 |
+| **prazo verificado só na leitura** | não há agendador | expirada nunca vira aprovada (`humano.md` §4) |
+| **checkpointer SQLite local** | um arquivo, uma máquina | sobrevive ao processo; não serve para vários servidores |
+| **remoção por conversa, não por titular**; dado derivado em outra conversa sobrevive | medido em `demonstrar_remocao.py` | declarado em `memoria.md` §5 |
+| **LM Studio local precisa estar ligado** | é o modelo escolhido | o modo `--controlado` roda a integração sem modelo, marcado como tal |

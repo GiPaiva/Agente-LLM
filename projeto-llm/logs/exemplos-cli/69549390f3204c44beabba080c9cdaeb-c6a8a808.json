@@ -1,0 +1,288 @@
+{
+  "quando": "2026-10-18T21:51:18.965187-03:00",
+  "evento": "aguardando_aprovacao",
+  "modo": "real",
+  "modelo": "google/gemma-4-e4b",
+  "multiagente": true,
+  "mcp": true,
+  "versao": {
+    "commit": "6c48749311f2e4b3ec459ed277c811321e014905",
+    "working_tree_modificado": false,
+    "sha256_fontes": "9d27dbe766f090ecea07ed069bf125c7b0ab11858dee7b961b4613345e97fbbc",
+    "arquivos": {
+      "src/agente.py": "76f243d7228fee7f7d4f2d341b6e3611e18886455e2d96345455a6e9e4439449",
+      "src/avaliar.py": "055a83c40e002f555a997fab8658631239d252f5ef970018b7f43399a9ebf020",
+      "src/avaliar_rag.py": "b7814e5565de6758a53d83d10b6d203359f8e02d8b387ba8ae5e995a7a27ad4d",
+      "src/benchmark.py": "e3d33b7f4e7c14fb6c65e79ac71f20766b8e6bf86403823bc262439f5bbdcef6",
+      "src/cliente_mcp_demo.py": "3b4fc1018c4193f12d763f3e73d53c66ddb22fa999b7f8b15d53e9d8e1723d48",
+      "src/comparar_agentes.py": "3fa578f2d5b79c5f07f512d64f3477a956bbde5e30ad701c865db03c83f5ffe0",
+      "src/config.py": "85d7263b851fa1bf48db312c2f560b825c952620b12233678e34254ba46e12dc",
+      "src/conhecimento.py": "ed561b8994386807ed9e96dca6ae3ff2f294a8fb292cb80ba082c3c49a4329a5",
+      "src/contratos.py": "0c462ad89833470feb586724c5ab63760f4a0f1578b6cdf216618c244bf17662",
+      "src/db.py": "581d4c25fdfc32902e67170203d634eb047cd6135592787f21e1b2839803779d",
+      "src/demonstrar_reducers.py": "28f11c3b03df76ac3b1a8075c1ea5c27a997b34edbaec4805cd016e0272a9207",
+      "src/demonstrar_remocao.py": "8b566bac68451e7ed43aae3c7e67f4262a679633202a572bbec1455663ab1d23",
+      "src/experimento_prompt.py": "dbae6b164780fc4cc327933e14388612c7df39deb94a5b42976ed9706644564b",
+      "src/ferramentas.py": "e9dece4086c4aa34a23260ff551b67588b98cc4d0f448ea9e2e510836c8a21e8",
+      "src/grafo.py": "0bbe64cacec2cce2c20835de0fe11b228c3839e351fff0b44c05c556a32d53e1",
+      "src/main.py": "8397cc69c4db14692a8fedac4fc601ba40171063cfe0b75b49fd6cc98ec7f7d5",
+      "src/medir_baseline.py": "dc4adcb335db579d2257fe8309859c86389043227bb337bb44f8328974315928",
+      "src/medir_instalacao.py": "3b2964656f7a3d73695ef146be861250cb71f5b47e98054d5d35bf29a5b32a89",
+      "src/metricas.py": "8617ae2343c709f22468df575404782c017743c945004dabf2face2314bad11b",
+      "src/modelo.py": "e59b481c8cd618b28d19c1727f78fcc2d37b7e49d8d0281ec8e140bdcd3a7da3",
+      "src/prompts/correcao-resposta.md": "4b453ca8a76b72d31d93d9e4812a0b7dba0ac394335f86abcd5203a18408fce1",
+      "src/prompts/correcao-revisao.md": "f485004b23e4d64133304eabd1177e49883cc1e1530ed1a0c7000b7ec8f52483",
+      "src/prompts/correcao-triagem.md": "ee6fc8a5c2f7d3eaf7344584672c5c094514462f99ef67ccaf96b6b0d866851c",
+      "src/prompts/procedimento.md": "5efd7f4d3359dd82af60805549e2b7f33a1b77b71e3d487d1a1eb2ab4a4a96db",
+      "src/prompts/reposicao.md": "a3c25240534493a6003e0162402ee719161145e88f256593b497793f200ea622",
+      "src/prompts/revisao.md": "9930cb04391ac05a1b7553f6b857072f05e6a397c8d624fb0020f8e3171b3035",
+      "src/prompts/sistema-v1.md": "98b8f2b4621b75ad9f72eef17cc135b15c8652fcd7ca23e8d7a76d396428bfa0",
+      "src/prompts/sistema-v2.md": "a79001bdf875a4af0982e7a459874345ea1c58e9b20ca0d1182acfe464f1d715",
+      "src/prompts/sistema-v3.md": "26e713edde25e5d2daa9ebc5ca053e7fdee73cc230a0f55a30c2b40e62c848ba",
+      "src/prompts/triagem.md": "dc2e96b97872671a76907ef0e163ef88851da445b3295af61b03b50440c66ab4",
+      "src/servico.py": "3473637ea070d947d178d03ec1e2dc3cf61340505b1447c856c6ebbf95719b7e",
+      "src/servidor_mcp.py": "3ea3d67e1b9ddbcf8eac1ca19220c2d10ddd345a9b35572f00315d37a1bd08e7",
+      "src/simulador.py": "27f8d2cbae9d50b339085c1de4e9cfa880cbe1d36c343ffd32cb1c6ddafd67c0",
+      "src/transporte.py": "67a4276054f0c6b67e1bfa79866abfe9c2b70391d7800044b161a53ec631b4a3",
+      "dados/casos-dificeis.md": "dc23ec09743ef93c90c0af879818c51dcb2a8656950c0d811112ae511088e489",
+      "dados/casos_rotulados.py": "79e2aa36e4ccbf2eaa6745b0fd60b862c18e43ed7d6bbe5979e428370b23133c",
+      "dados/corpus/conferencia.md": "402b360da721707fda725d72673dc3713b5175dc62a92a10cc65aa3fad866aaa",
+      "dados/corpus/fornecedor-a.md": "634808cad9f62f24509e15815a5109876e0b72d3df6884ae115b2abf1c7767d7",
+      "dados/corpus/fornecedor-b.md": "13051cb9ff87267549c7b466e2271e186ef9c7e4c3f9ed45b36141cc19e96e72",
+      "dados/corpus/politica-v1-revogada.md": "6048d7b9525bde388f93db4fa731abcea1a6068a8106a64b3dc53d35abe4d8f3",
+      "dados/corpus/politica-v2.md": "60e240d666eb06b08b61690ac7af5dbfce68392538091e44d6473dc681470c88",
+      "dados/gerar_banco.py": "1a6520a4dcc2070c28c9bebf565725fb5c6d4bdd3987a7e7c2b0bbd1950136c1",
+      "dados/perguntas-rag.json": "a883d46da7bdb2fda62cc9050ebc778ac61825532ce689ebf794951ec3448d7f",
+      "dados/rag-config.json": "4dc1b90d95c348a0ff8eda623d3dcedc89bef1f82c6be0989d571ad33b1daa0f",
+      "dados/referencia-manual.md": "9c04987f76fba0524d145c2642dc899bbffc7967e22a70fc31d4534a2a8ecf52",
+      "requirements.txt": "534b551be896a388edc0dbce6d5360955a583b98caf6a7aa955d3fcdcc0f0f84"
+    }
+  },
+  "parametros": {
+    "temperature": 0.0,
+    "max_tokens": 4096,
+    "timeout_s": 120.0,
+    "max_segundos": 600.0,
+    "max_modelo": 8,
+    "max_ferramentas": 8,
+    "recursion_limit": 64,
+    "rag": {
+      "k": 5,
+      "limiar": 0.45,
+      "calibrado": true,
+      "embedding": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "quando": "2026-10-18T21:10:35.676264-03:00",
+      "dataset": "dados/perguntas-rag.json:calibracao"
+    }
+  },
+  "thread_id": "operador-demo:73c23820d6a44568a512188d2bcaab32",
+  "caso_id": "69549390f3204c44beabba080c9cdaeb",
+  "entrada": "Preciso repor arroz 5kg.",
+  "metricas": {
+    "n_modelo": 4,
+    "n_ferramentas": 3,
+    "n_recuperacoes": 0,
+    "tokens_entrada": 4493,
+    "tokens_saida": 3385,
+    "uso_incompleto": false,
+    "processamento_s": 145.3709900410031
+  },
+  "saida": {
+    "resultado": "O gerente precisa revisar esta solicitação antes da compra.",
+    "fontes": [
+      {
+        "id": "estoque:ARROZ_5KG",
+        "tipo": "registro",
+        "trecho": "{\"id\": \"ARROZ_5KG\", \"nome\": \"Arroz 5kg\", \"categoria\": \"mercearia\", \"estoque_atual\": 12, \"estoque_minimo\": 30, \"venda_media_diaria\": 8.0, \"preco_unitario\": 18.5, \"fornecedor_id\": \"FORN_A\", \"abaixo_do_minimo\": true}"
+      },
+      {
+        "id": "calculo:ARROZ_5KG",
+        "tipo": "registro",
+        "trecho": "{\"id\": \"ARROZ_5KG\", \"nome\": \"Arroz 5kg\", \"categoria\": \"mercearia\", \"estoque_atual\": 12, \"estoque_minimo\": 30, \"venda_media_diaria\": 8.0, \"preco_unitario\": 18.5, \"fornecedor_id\": \"FORN_A\", \"pedido_minimo\": 50, \"prazo_dias\": 2, \"produto_id\": \"ARROZ_5KG\", \"precisa_repor\": true, \"quantidade_recomendada\": 50, \"quantidade\": 50, \"custo_estimado\": 925.0, \"orcamento_disponivel\": 1200.0, \"limite_sem_aprovacao\": 500}"
+      }
+    ],
+    "suficiente": true,
+    "status": "aguardando_aprovacao",
+    "thread_id": "operador-demo:73c23820d6a44568a512188d2bcaab32",
+    "caso_id": "69549390f3204c44beabba080c9cdaeb",
+    "perguntas": [],
+    "aprovacao": {
+      "acao": "registrar_compra",
+      "caso_id": "69549390f3204c44beabba080c9cdaeb",
+      "produto": "Arroz 5kg",
+      "fornecedor": "FORN_A",
+      "quantidade": 50,
+      "custo_estimado": 925.0,
+      "orcamento": 1200.0,
+      "motivo": "Valor acima de R$ 500 ou quantidade precisa de ajuste ao saldo",
+      "consequencia": "Criar uma solicitação local e debitar o orçamento; nenhum envio externo.",
+      "respostas": [
+        "aprovar",
+        "rejeitar"
+      ],
+      "editavel": [
+        "quantidade"
+      ],
+      "erro_validacao_anterior": null,
+      "expira": "2026-10-19T21:51:18.961322-03:00"
+    },
+    "solicitacao": null,
+    "termino": "aguardando_aprovacao"
+  },
+  "eventos": [
+    {
+      "caso_id": "69549390f3204c44beabba080c9cdaeb",
+      "quando": "2026-10-18T21:49:08.266031-03:00",
+      "tipo": "modelo",
+      "agente": "reposicao",
+      "etapa": "triagem",
+      "resposta": {
+        "nome": "extrair_intencao",
+        "argumentos": {
+          "intencao": "reposicao",
+          "pergunta": "Preciso repor arroz 5kg.",
+          "produto": "arroz 5kg",
+          "relato_falta": true
+        },
+        "entrada": 329,
+        "saida": 382,
+        "tentativas": 1,
+        "uso_disponivel": true
+      }
+    },
+    {
+      "caso_id": "69549390f3204c44beabba080c9cdaeb",
+      "quando": "2026-10-18T21:49:08.274278-03:00",
+      "tipo": "ferramenta",
+      "agente": "reposicao",
+      "ferramenta": "consultar_estoque",
+      "argumentos": {
+        "produto": "arroz 5kg"
+      },
+      "resultado": {
+        "id": "ARROZ_5KG",
+        "nome": "Arroz 5kg",
+        "categoria": "mercearia",
+        "estoque_atual": 12,
+        "estoque_minimo": 30,
+        "venda_media_diaria": 8.0,
+        "preco_unitario": 18.5,
+        "fornecedor_id": "FORN_A",
+        "abaixo_do_minimo": true
+      }
+    },
+    {
+      "caso_id": "69549390f3204c44beabba080c9cdaeb",
+      "quando": "2026-10-18T21:49:08.278239-03:00",
+      "tipo": "ferramenta",
+      "agente": "reposicao",
+      "ferramenta": "calcular_reposicao",
+      "argumentos": {
+        "produto_id": "ARROZ_5KG"
+      },
+      "resultado": {
+        "id": "ARROZ_5KG",
+        "nome": "Arroz 5kg",
+        "categoria": "mercearia",
+        "estoque_atual": 12,
+        "estoque_minimo": 30,
+        "venda_media_diaria": 8.0,
+        "preco_unitario": 18.5,
+        "fornecedor_id": "FORN_A",
+        "pedido_minimo": 50,
+        "prazo_dias": 2,
+        "produto_id": "ARROZ_5KG",
+        "precisa_repor": true,
+        "quantidade_recomendada": 50,
+        "quantidade": 50,
+        "custo_estimado": 925.0,
+        "orcamento_disponivel": 1200.0,
+        "limite_sem_aprovacao": 500
+      }
+    },
+    {
+      "caso_id": "69549390f3204c44beabba080c9cdaeb",
+      "quando": "2026-10-18T21:49:30.998792-03:00",
+      "tipo": "modelo",
+      "agente": "reposicao",
+      "etapa": "decisao",
+      "resposta": {
+        "nome": "emitir_resposta",
+        "argumentos": {
+          "fontes": [
+            "estoque:ARROZ_5KG",
+            "calculo:ARROZ_5KG"
+          ],
+          "resultado": "O estoque de Arroz 5kg está em 12 unidades, abaixo do mínimo de 30. A reposição recomendada é de 50 unidades, com custo estimado de R$ 925,00. Este valor excede o limite sem aprovação de R$ 500,00.",
+          "suficiente": true
+        },
+        "entrada": 1854,
+        "saida": 589,
+        "tentativas": 1,
+        "uso_disponivel": true
+      }
+    },
+    {
+      "caso_id": "69549390f3204c44beabba080c9cdaeb",
+      "quando": "2026-10-18T21:50:23.719915-03:00",
+      "tipo": "modelo",
+      "agente": "revisao",
+      "etapa": "revisao",
+      "resposta": {
+        "nome": "consultar_fornecedor",
+        "argumentos": {
+          "fornecedor": "FORN_A"
+        },
+        "entrada": 1119,
+        "saida": 1312,
+        "tentativas": 1,
+        "uso_disponivel": true
+      }
+    },
+    {
+      "caso_id": "69549390f3204c44beabba080c9cdaeb",
+      "quando": "2026-10-18T21:50:23.726871-03:00",
+      "tipo": "ferramenta",
+      "agente": "revisao",
+      "ferramenta": "consultar_fornecedor",
+      "argumentos": {
+        "fornecedor": "FORN_A"
+      },
+      "resultado": {
+        "id": "FORN_A",
+        "nome": "Fornecedor A (mercearia seca)",
+        "prazo_dias": 2,
+        "pedido_minimo": 50
+      }
+    },
+    {
+      "caso_id": "69549390f3204c44beabba080c9cdaeb",
+      "quando": "2026-10-18T21:51:18.959925-03:00",
+      "tipo": "modelo",
+      "agente": "revisao",
+      "etapa": "revisao",
+      "resposta": {
+        "nome": "emitir_parecer",
+        "argumentos": {
+          "aprovado": true,
+          "fontes": [
+            "estoque:ARROZ_5KG",
+            "calculo:ARROZ_5KG"
+          ],
+          "motivos": []
+        },
+        "entrada": 1191,
+        "saida": 1102,
+        "tentativas": 1,
+        "uso_disponivel": true
+      }
+    }
+  ],
+  "uso_incompleto": false,
+  "custo_api": 0.0,
+  "tarifa_usd_milhao": {
+    "entrada": 0.0,
+    "saida": 0.0
+  },
+  "energia_kwh": null
+}

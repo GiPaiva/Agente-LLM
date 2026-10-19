@@ -39,6 +39,10 @@ def main(n=2):
     if not os.environ.get('LLM_BASE_URL') or not os.environ.get('LLM_MODELO'):
         print('PENDENTE: ablação exige modelo real configurado; nenhum efeito de prompt foi medido.')
         return 2
+    if FRASE not in (RAIZ / 'src' / 'prompts' / 'triagem.md').read_text():
+        print('A frase já foi removida (decisão em docs/prompts.md §3). Para reproduzir a medição, '
+              'rode no commit 6c48749: git checkout 6c48749 -- src/prompts/triagem.md')
+        return 2
     original = Aplicacao._prompt
     rows = []
     with tempfile.TemporaryDirectory() as tmp:

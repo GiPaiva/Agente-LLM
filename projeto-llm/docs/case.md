@@ -1,5 +1,9 @@
 # Case — Assistente de reposição de estoque para supermercado de pequeno porte
 
+> **Parte 2:** as seções 1 a 11 são o case da Parte 1, preservado como foi
+> entregue (inclusive nomes de arquivo e ferramentas daquela versão). O que o
+> domínio ensinou depois, e o que mudou no sistema, está na **§12**.
+>
 > Itens 1 e 2 da entrega. A arquitetura do agente está em
 > [`arquitetura.md`](arquitetura.md), a análise de modelos em
 > [`modelos.md`](modelos.md), e o histórico de decisões em

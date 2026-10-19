@@ -4,10 +4,11 @@
 > `src/avaliar_rag.py` (calibração e avaliação), `src/grafo.py` (`_ferramentas`:
 > a busca como ferramenta). Conjunto de perguntas: `dados/perguntas-rag.json`.
 > Corpus: `dados/corpus/`. Medição: `logs/rag/20261018-211035.json`
-> (embedding real, sem LLM; gerada sobre o commit `28228b6` com as alterações
-> desta rodada ainda não commitadas, por isso `working_tree_modificado: true`.
-> Os parâmetros escolhidos são os de `dados/rag-config.json`, que foram
-> commitados em seguida).
+> (embedding real, sem LLM). O log foi gerado com o código que, minutos depois,
+> virou o commit `6c48749`. Por isso ele registra `commit: 28228b6` e
+> `working_tree_modificado: true`: o próprio script reescreve
+> `dados/rag-config.json`, arquivo versionado. Os parâmetros que ele escolheu
+> (k=5, limiar 0,45) são os que estão commitados nesse arquivo.
 
 ---
 
@@ -198,4 +199,17 @@ modelo.
 - citar uma fonte que não foi recuperada também é rejeitado.
 
 **Chamadas de recuperação por execução, medidas** (`n_recuperacoes` nos logs da
-demonstração real): ver a tabela em [`io.md`](io.md) §4.
+demonstração real, tabela completa em [`io.md`](io.md) §4): **1 busca em 9
+execuções**, exatamente na única pergunta de política (*garantia de
+televisores*), que voltou vazia e virou recusa. As 8 execuções sem busca são
+consultas de estoque, pedidos de reposição, entradas incompletas ou ambíguas e
+uma fora do escopo: nenhuma precisava do corpus, e todas acertaram. Com etapa
+fixa, seriam 9 buscas, 8 delas inúteis.
+
+**O custo da escolha, também medido.** No pedido *"Preciso repor arroz 5kg, mas
+e se o orçamento não der para tudo?"* (`logs/autonomia/`), a resposta está no
+corpus (`POL-V2 §2`, a exceção da redução), e o modelo **não buscou**. Uma
+etapa fixa teria trazido o trecho. A ferramenta economiza 8 buscas em 9 e, neste
+caso, perdeu 1. O dano é contido porque a exceção é exercida no ponto de
+aprovação humana (o gerente edita a quantidade) e o serviço reaplica a regra do
+saldo de qualquer forma.

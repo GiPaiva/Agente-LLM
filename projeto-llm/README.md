@@ -1,4 +1,4 @@
-# Assistente de reposição de estoque — Parte 1
+# Assistente de reposição de estoque — Parte 2: o agente de verdade
 
 ## Grupo
 
@@ -13,49 +13,62 @@
 > atual, giro de venda e pedido mínimo do fornecedor — sem nenhum sistema que
 > junte essas três informações.
 
-Detalhamento completo em [`docs/case.md`](docs/case.md).
+O sistema recebe o pedido em texto livre e devolve um objeto validado
+(resultado, fonte, suficiência). Ele consulta o cadastro, as regras de compra
+(RAG) e a memória do operador, e registra a solicitação de compra. Acima de
+R$ 500, para antes de registrar e espera o gerente. Detalhes em
+[`docs/case.md`](docs/case.md). O mapa de cada item da entrega está em
+[`docs/entrega.md`](docs/entrega.md).
 
 ---
 
-## Como rodar
+## Como rodar (do zero, em menos de 5 minutos)
 
-Pré-requisito: **Python 3.11+**. Testado do zero — venv nova, instalação,
-`.env` e os 4 casos rodando — em **2 minutos** (29 s de instalação + 94 s
-de execução), contra o teto de 5 minutos do enunciado.
+Pré-requisitos: **Python 3.12** e o **LM Studio** com o modelo
+`google/gemma-4-e4b` carregado e o servidor local ligado (porta 1234).
+Qualquer endpoint compatível com a API da OpenAI serve; ver
+[`docs/modelos.md`](docs/modelos.md).
 
 ```bash
-git clone <url-do-repositorio>
-cd Agente-LLM
-
-python3 -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
+cd projeto-llm
+python3.12 -m venv .venv
+source .venv/bin/activate              # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# edite o .env: LLM_BASE_URL, LLM_MODELO e OPENAI_API_KEY.
-# O .env.example traz os três candidatos de docs/modelos.md, prontos para copiar.
+# no .env, preencha:
+#   LLM_BASE_URL=http://127.0.0.1:1234/v1
+#   LLM_MODELO=google/gemma-4-e4b
+#   OPENAI_API_KEY=lm-studio          (o LM Studio aceita qualquer valor)
+# os demais podem ficar vazios: os padrões estão em src/config.py
 
-python src/main.py --demo          # os 4 casos do item 4.5, com log
-python src/main.py                 # modo interativo
+python src/main.py "Quanto temos de arroz?"
 ```
 
-Na primeira execução, se `dados/estoque.db` não existir, ele é **gerado
-automaticamente** com os dados simulados — não é preciso rodar nada antes.
+**Medido do zero** (2026-10-18, cópia limpa exatamente dos arquivos desta entrega → venv → `pip install` → `.env` → primeira pergunta respondida pelo modelo real): **45 s**, com o cache do pip já aquecido nesta máquina. A primeira pergunta, de 30 a 35 s, inclui o download do modelo de embedding. Numa máquina sem cache, a instalação baixa as dependências (onnxruntime, numpy, langgraph, …), e o tempo passa a depender da rede.
 
-### Qual modelo configurar
-
-O sistema fala com qualquer endpoint compatível com a API da OpenAI. Trocar de
-provedor é trocar **três variáveis de ambiente**, nunca código. O modelo
-escolhido e a justificativa estão em [`docs/modelos.md`](docs/modelos.md).
+- **A primeira execução baixa o modelo de embedding** (cerca de 220 MB,
+  `paraphrase-multilingual-MiniLM-L12-v2`, para `runtime/modelos/`). As
+  seguintes não baixam nada.
+- Bancos, checkpoints e logs operacionais ficam em `runtime/`, criado sozinho.
+  O banco simulado é gerado na primeira execução, e não é preciso rodar nada
+  antes.
+- Sem modelo nenhum, só para conferir a integração: `python src/main.py
+  --controlado "Quanto temos de arroz?"`. Esse modo usa um dublê determinístico,
+  identificado como tal na saída (`"modo": "controlado"`). Não mede o LLM.
 
 ### Os outros comandos
 
 ```bash
-python src/avaliar.py              # o verificador: roda o conjunto rotulado
-python src/avaliar.py --n 3        # 3 execuções por caso (o critério k de N)
-python src/avaliar.py --familia 2  # só a família de divergência
-python src/benchmark.py            # compara os 3 candidatos (item 3.3)
-python dados/gerar_banco.py        # regenera o banco simulado
+python -m pytest tests -q                 # 52 testes, sem modelo (dublês)
+python conferir_grafo.py                  # nós e arestas do grafo REAL
+python src/main.py --demo                 # os 8 cenários com o modelo real -> logs/demonstracoes/real/
+python src/avaliar.py --controlado --n 3  # 20 casos rotulados × 3 com dublê (o mesmo do CI)
+python src/avaliar_rag.py                 # calibra k/limiar e mede as 10 perguntas do RAG
+python src/demonstrar_reducers.py         # o que acontece sem reducer (§7.2)
+python src/demonstrar_remocao.py          # remoção com varredura das estruturas (§5.4)
+python src/main.py --pendentes            # aprovações pendentes (expira as vencidas)
+python src/main.py --perfil gerente --remover-conversa <thread_id>
 ```
 
 ---
@@ -64,154 +77,226 @@ python dados/gerar_banco.py        # regenera o banco simulado
 
 ### O que a pessoa digita
 
-Uma pergunta em português sobre um produto do estoque. **Texto livre, sem
-formato fixo** — é para ser digitado no meio do turno:
+Texto livre, como falaria com um colega: *"tá acabando o arroz, pede mais"*,
+*"como está o feijão?"*, *"posso passar do orçamento?"*. Sem formulário. Os
+metadados que não são digitados vêm da linha de comando: `--usuario` (quem
+pergunta) e `--thread` (para continuar uma conversa). Sem `--thread`, cada
+chamada abre uma conversa nova, e o `thread_id` volta na saída.
 
-```
-O arroz de 5kg está acabando, veja se precisamos pedir mais.
-tá acabando o arroz, pede mais pro fornecedor
-Como está o feijão?
-quanto temos de açúcar?
-```
-
-### O que o sistema faz com aquilo
-
-Consulta o estoque real num banco SQLite. Julga — e este é o ponto em que o
-modelo decide — se a pergunta pede **ação** ou só **informação**, e se o que
-você afirmou bate com o registro. Calcula a quantidade de reposição já
-respeitando o pedido mínimo do fornecedor. E, **só quando o produto está de
-fato abaixo do mínimo**, registra uma solicitação de compra.
-
-### Que saída ela recebe, e como interpretá-la
-
-Um texto curto com os números consultados, mais uma linha técnica entre
-colchetes:
-
-```
-[término: respondeu · 2 passos · 5561 tokens]
+```bash
+python src/main.py "O sal de 1kg tá no fim, registra a reposição."
+python src/main.py                    # modo interativo (mantém a mesma conversa)
+python src/main.py --thread <thread_id> "o de 5kg"    # responde a uma pergunta do sistema
 ```
 
-| Campo | O que significa |
-|---|---|
-| `término` | por que o programa parou: `respondeu`, `orcamento_esgotado`, `laco_detectado`, `truncado` ou `erro_fatal` |
-| `passos` | quantas chamadas de ferramenta foram feitas |
-| `tokens` | o custo da execução |
+### O exemplo principal — o caminho feliz, real
 
-Quando uma solicitação é registrada, a resposta traz **protocolo** e **status**:
+O operador digita:
 
-| Status | O que fazer |
-|---|---|
-| `criada` | pronto — o orçamento já foi debitado |
-| `aguardando_aprovacao_gerente` | passou de R$ 500: **avise o gerente**, o pedido ainda não vale |
-
-Toda execução grava a trajetória completa em `logs/` — ferramenta, argumentos,
-resultado, erro, motivo do término e o carimbo `prompt × modelo × parâmetros`.
-
-### Um exemplo completo, real
-
-Entrada e saída **reais**, copiadas de uma execução de `python src/main.py
---demo`. O log completo desta execução está em `logs/demo/`.
-
-```
-$ python src/main.py --demo
-
-=== caso 1a · 1_simples ===
-Operador: O arroz de 5kg está acabando, veja se precisamos pedir mais.
-   passo 0 · contexto enviado: 1210 tokens · fase analise
-           consultar_estoque({'produto': 'arroz de 5kg'})
-             -> {"id": "ARROZ_5KG", "nome": "Arroz 5kg", "estoque_atual": 12,
-                 "estoque_minimo": 30, "abaixo_do_minimo": true, ...}
-      [gating] Arroz 5kg está abaixo do mínimo — escrita liberada
-   passo 1 · contexto enviado: 1627 tokens · fase reposicao
-           calcular_reposicao({'produto_id': 'ARROZ_5KG'})
-             -> {"precisa_repor": true, "quantidade_recomendada": 50,
-                 "quantidade_antes_do_pedido_minimo": 48,
-                 "pedido_minimo_do_fornecedor": 50, "custo_estimado": 925.0, ...}
-   passo 2 · contexto enviado: 2143 tokens · fase reposicao
-           criar_solicitacao_compra({'produto_id': 'ARROZ_5KG',
-                                     'quantidade': 50,
-                                     'chave': 'ARROZ_5KG:50'})
-             -> {"protocolo": "ARROZ_5KG:50",
-                 "status": "aguardando_aprovacao_gerente", ...}
-   passo 3 · contexto enviado: 2556 tokens · fase reposicao
-
-Assistente: Sim, precisamos pedir mais. O estoque está baixo (12 unidades,
-mínimo 30).
-
-Acabei de criar a solicitação de compra para **50 unidades** do Arroz 5kg.
-
-*   **Protocolo:** ARROZ_5KG:50
-*   **Status:** Aguardando aprovação do gerente.
-*   **Prazo de entrega:** 2 dias.
-
-[término: respondeu · 3 passos · 8607 tokens]
+```text
+O sal de 1kg tá no fim, registra a reposição.
 ```
 
-**Como ler este exemplo.** A linha `[gating]` é o momento em que o **código** —
-não o modelo — libera a ferramenta de escrita, porque a consulta devolveu
-`abaixo_do_minimo: true`. Antes dela, `criar_solicitacao_compra` não existia
-para o modelo.
+E recebe o objeto inteiro:
 
-E repare em `quantidade_antes_do_pedido_minimo: 48` contra
-`quantidade_recomendada: 50`: repor até 2× o mínimo daria 48, mas o pedido
-mínimo do Fornecedor A é 50. Quem aplicou a regra foi a ferramenta, em código —
-o modelo apenas repassou o número.
-
-### O que o sistema **não** faz
-
-- **Não envia nada a fornecedor nenhum.** A solicitação fica registrada no
-  banco e é cancelável. O envio real é Parte 2/3, e aí exigirá confirmação
-  humana.
-- **Não aprova sozinho compra acima de R$ 500.** Marca como pendente e passa
-  para o gerente.
-- **Não inventa número.** Se o produto não está no cadastro, ele diz isso e
-  lista os que existem.
-- **Não escolhe por você quando o termo é ambíguo.** "Açúcar" casa com dois
-  produtos; ele pergunta qual.
-- **Não lembra da conversa anterior.** Cada pergunta é uma execução
-  independente. Memória entre execuções é Parte 2.
-- **Não sabe o que você viu na loja.** Se você sabe de uma promoção que vai
-  esvaziar a gôndola amanhã, ele não tem como saber — ele responde pelo
-  histórico.
-
-### Quando ele não sabe responder
-
-Ele **diz o que não achou e o que existe**, em vez de chutar ou de culpar o
-sistema:
-
-```
-Você: Quanto temos de iogurte de morango no estoque?
-
-Assistente: Desculpe, mas "iogurte de morango" não está no nosso cadastro atual. Os produtos que temos cadastrados são: Arroz 5kg, Açúcar Refinado 1kg, Açúcar Refinado 5kg, Feijão 1kg, Refrigerante 2L e Sal 1kg.
+```json
+{
+  "resultado": "Solicitação criada: 50 unidades; custo R$ 115.00. Nenhum pedido foi enviado ao fornecedor.",
+  "fontes": [
+    {
+      "id": "estoque:SAL_1KG",
+      "tipo": "registro",
+      "trecho": "{\"id\": \"SAL_1KG\", \"nome\": \"Sal 1kg\", \"categoria\": \"mercearia\", \"estoque_atual\": 8, \"estoque_minimo\": 20, \"venda_media_diaria\": 1.5, \"preco_unitario\": 2.3, \"fornecedor_id\": \"FORN_A\", \"abaixo_do_minimo\": true}"
+    },
+    {
+      "id": "calculo:SAL_1KG",
+      "tipo": "registro",
+      "trecho": "{\"id\": \"SAL_1KG\", \"nome\": \"Sal 1kg\", \"categoria\": \"mercearia\", \"estoque_atual\": 8, \"estoque_minimo\": 20, \"venda_media_diaria\": 1.5, \"preco_unitario\": 2.3, \"fornecedor_id\": \"FORN_A\", \"pedido_minimo\": 50, \"prazo_dias\": 2, \"produto_id\": \"SAL_1KG\", \"precisa_repor\": true, \"quantidade_recomendada\": 50, \"quantidade\": 50, \"custo_estimado\": 115.0, \"orcamento_disponivel\": 1200.0, \"limite_sem_aprovacao\": 500}"
+    }
+  ],
+  "suficiente": true,
+  "status": "criada",
+  "thread_id": "operador-demo:0bd05d303df74108afd97b961e5bb6cc",
+  "caso_id": "52cfa5f150c34124993aa464c3fe3a62",
+  "perguntas": [],
+  "aprovacao": null,
+  "solicitacao": {
+    "chave": "baf04d947b00352e40e3e304ba5c9874319d2bca854154d5a46c44e24d66bad0",
+    "produto_id": "SAL_1KG",
+    "quantidade": 50,
+    "custo_estimado": 115.0,
+    "status": "criada",
+    "caso_id": "52cfa5f150c34124993aa464c3fe3a62",
+    "ja_existia": false
+  },
+  "termino": "criada"
+}
 ```
 
-E quando o que você diz **não bate** com o registro, ele diz os dois lados em
-vez de escolher um:
+> Copiado do log [`logs/demonstracoes/real/20261018-212136-726175/52cfa5f150c34124993aa464c3fe3a62-a4192e18.json`](logs/demonstracoes/real/20261018-212136-726175/52cfa5f150c34124993aa464c3fe3a62-a4192e18.json): commit `6c48749`, 2026-10-18 21:23, `google/gemma-4-e4b`, MCP, 127 s ativos, 4 chamadas de modelo.
 
-```
-Você: O refrigerante de 2 litros está acabando, já pode pedir mais pro fornecedor?
+**Como ler:** `status: criada` é a solicitação registrada, com 50 unidades e
+não as 32 da conta 2×20−8, porque o código aplicou o pedido mínimo do
+fornecedor. `fontes` traz os registros que sustentam o número, com o trecho
+para conferir. `suficiente: true` diz que havia base. Nada foi enviado ao
+fornecedor: é uma solicitação interna. A CLI imprime esse objeto dentro de
+`{"modo": "real", "saida": ...}`.
 
-Assistente: O sistema mostra o contrário do que você viu: há 85 unidades de Refrigerante 2L, acima do mínimo de 20. Não precisa pedir agora.
-```
+Outros exemplos reais, com a recusa e as entradas incompleta, ambígua e fora
+do escopo: [`docs/io.md`](docs/io.md).
+
+### Quando ele não sabe, ou não deve, responder
+
+| Situação | `status` | O que vem em `resultado` |
+|---|---|---|
+| produto não informado (*"Preciso repor."*) | `esclarecimento` | a pergunta, também em `perguntas` |
+| nome ambíguo (*"o açúcar"*) | `esclarecimento` | os candidatos (1kg ou 5kg) |
+| produto que não existe | `recusado` | a lista do que existe |
+| regra que não está no corpus | `recusado` | o que não encontrou; `suficiente: false`, `fontes: []` |
+| fora do escopo | `recusado` | o que o sistema faz |
+| operador diz que acabou, cadastro diz 85 | `respondido` | os dois lados, e onde conferir; nenhuma compra |
 
 ---
 
-## Como sabemos que a saída está certa
+## O que acontece quando o grafo para e espera alguém
 
-O verificador é código, não opinião: **20 casos rotulados à mão**
-(`dados/casos_rotulados.py`), conferidos por `src/avaliar.py` com asserções de
-propriedade, `k de N` execuções e **limiar declarado antes de rodar**.
+Compra acima de **R$ 500** (ou que precise de ajuste ao saldo) **não é
+registrada**: o grafo pausa num `interrupt`, grava o checkpoint em
+`runtime/checkpoints.sqlite` e devolve `aguardando_aprovacao`. Execução real,
+pela CLI (`logs/exemplos-cli/`):
+
+**1. O operador pede:**
 
 ```bash
-python src/avaliar.py --n 3
+python src/main.py "Preciso repor arroz 5kg."
 ```
 
-Ele imprime o placar com denominador, o resultado por família, se a **regra
-assimétrica** foi violada (nenhuma compra indevida) e um veredito — e devolve
-código de saída ≠ 0 quando reprova.
+```json
+{
+  "modo": "real",
+  "saida": {
+    "resultado": "O gerente precisa revisar esta solicitação antes da compra.",
+    "fontes": [
+      {
+        "id": "estoque:ARROZ_5KG",
+        "tipo": "registro",
+        "trecho": "{\"id\": \"ARROZ_5KG\", \"nome\": \"Arroz 5kg\", \"categoria\": \"mercearia\", \"estoque_atual\": 12, \"estoque_minimo\": 30, \"venda_media_diaria\": 8.0, \"preco_unitario\": 18.5, \"fornecedor_id\": \"FORN_A\", \"abaixo_do_minimo\": true}"
+      },
+      {
+        "id": "calculo:ARROZ_5KG",
+        "tipo": "registro",
+        "trecho": "{\"id\": \"ARROZ_5KG\", \"nome\": \"Arroz 5kg\", \"categoria\": \"mercearia\", \"estoque_atual\": 12, \"estoque_minimo\": 30, \"venda_media_diaria\": 8.0, \"preco_unitario\": 18.5, \"fornecedor_id\": \"FORN_A\", \"pedido_minimo\": 50, \"prazo_dias\": 2, \"produto_id\": \"ARROZ_5KG\", \"precisa_repor\": true, \"quantidade_recomendada\": 50, \"quantidade\": 50, \"custo_estimado\": 925.0, \"orcamento_disponivel\": 1200.0, \"limite_sem_aprovacao\": 500}"
+      }
+    ],
+    "suficiente": true,
+    "status": "aguardando_aprovacao",
+    "thread_id": "operador-demo:73c23820d6a44568a512188d2bcaab32",
+    "caso_id": "69549390f3204c44beabba080c9cdaeb",
+    "perguntas": [],
+    "aprovacao": {
+      "acao": "registrar_compra",
+      "caso_id": "69549390f3204c44beabba080c9cdaeb",
+      "produto": "Arroz 5kg",
+      "fornecedor": "FORN_A",
+      "quantidade": 50,
+      "custo_estimado": 925.0,
+      "orcamento": 1200.0,
+      "motivo": "Valor acima de R$ 500 ou quantidade precisa de ajuste ao saldo",
+      "consequencia": "Criar uma solicitação local e debitar o orçamento; nenhum envio externo.",
+      "respostas": [
+        "aprovar",
+        "rejeitar"
+      ],
+      "editavel": [
+        "quantidade"
+      ],
+      "erro_validacao_anterior": null,
+      "expira": "2026-10-19T21:51:18.961322-03:00"
+    },
+    "solicitacao": null,
+    "termino": "aguardando_aprovacao"
+  }
+}
+```
 
-Os números medidos estão em [`docs/decisoes.md`](docs/decisoes.md) e
-[`docs/modelos.md`](docs/modelos.md); os relatórios brutos em `logs/avaliacao/`.
+**2. O operador tenta aprovar, e não pode:**
+
+```bash
+python src/main.py --thread <thread_id> --retomar aprovar --quantidade 55
+# Somente o perfil simulado gerente pode aprovar/rejeitar.
+```
+
+**3. O gerente aprova editando a quantidade para 55:**
+
+```bash
+python src/main.py --perfil gerente --thread <thread_id> --retomar aprovar --quantidade 55
+```
+
+```json
+{
+  "modo": "real",
+  "saida": {
+    "resultado": "Solicitação criada: 55 unidades; custo R$ 1017.50. Nenhum pedido foi enviado ao fornecedor.",
+    "fontes": [
+      {
+        "id": "estoque:ARROZ_5KG",
+        "tipo": "registro",
+        "trecho": "{\"id\": \"ARROZ_5KG\", \"nome\": \"Arroz 5kg\", \"categoria\": \"mercearia\", \"estoque_atual\": 12, \"estoque_minimo\": 30, \"venda_media_diaria\": 8.0, \"preco_unitario\": 18.5, \"fornecedor_id\": \"FORN_A\", \"abaixo_do_minimo\": true}"
+      },
+      {
+        "id": "calculo:ARROZ_5KG",
+        "tipo": "registro",
+        "trecho": "{\"id\": \"ARROZ_5KG\", \"nome\": \"Arroz 5kg\", \"categoria\": \"mercearia\", \"estoque_atual\": 12, \"estoque_minimo\": 30, \"venda_media_diaria\": 8.0, \"preco_unitario\": 18.5, \"fornecedor_id\": \"FORN_A\", \"pedido_minimo\": 50, \"prazo_dias\": 2, \"produto_id\": \"ARROZ_5KG\", \"precisa_repor\": true, \"quantidade_recomendada\": 50, \"quantidade\": 50, \"custo_estimado\": 925.0, \"orcamento_disponivel\": 1200.0, \"limite_sem_aprovacao\": 500}"
+      }
+    ],
+    "suficiente": true,
+    "status": "criada",
+    "thread_id": "operador-demo:73c23820d6a44568a512188d2bcaab32",
+    "caso_id": "69549390f3204c44beabba080c9cdaeb",
+    "perguntas": [],
+    "aprovacao": null,
+    "solicitacao": {
+      "chave": "3c4a6667435b3b841e6441898a5e237019161b4695114f6491e487a7c15158b3",
+      "produto_id": "ARROZ_5KG",
+      "quantidade": 55,
+      "custo_estimado": 1017.5,
+      "status": "criada",
+      "caso_id": "69549390f3204c44beabba080c9cdaeb",
+      "ja_existia": false
+    },
+    "termino": "criada"
+  }
+}
+```
+
+**4. A mesma aprovação chega de novo e não duplica nada.** A saída é idêntica à
+anterior; o log registra `aprovacao_repetida`, e o banco tem **uma**
+solicitação, com o saldo de R$ 1 200 − 1 017,50 = **R$ 182,50**.
+
+- **Respostas aceitas:** `--retomar aprovar`, `--retomar rejeitar`,
+  `--retomar aprovar --quantidade N` (editar). Uma edição inválida, abaixo do
+  pedido mínimo ou acima do saldo, **volta à pausa** mostrando o erro.
+- **Se ninguém responder em 24 h:** a solicitação **expira**, e expirar é
+  rejeitar. O silêncio nunca autoriza a compra. O vencimento é verificado ao
+  listar (`--pendentes`) ou ao retomar.
+- **Outra pergunta na mesma conversa** antes da decisão é recusada: primeiro
+  decide-se a pendência.
+- A pausa sobrevive ao fim do processo: o gerente pode aprovar em outro
+  terminal, horas depois.
+
+Detalhes em [`docs/humano.md`](docs/humano.md).
+
+---
+
+## Como sabemos que funciona
+
+| O quê | Resultado | Onde |
+|---|---|---|
+| os 8 cenários com o modelo real (os 6 casos do §9 + incompleta + ambígua) | **8/8**, commit `6c48749`, árvore limpa, via MCP | `logs/demonstracoes/real/20261018-212136-726175/` · [`docs/io.md`](docs/io.md) |
+| testes automatizados (regra de negócio, contratos, HITL, memória, RAG, reducers, compatibilidade com LM Studio) | **52 passed** | `tests/test_sistema.py` |
+| 20 casos rotulados × 3, com dublê (integração, não qualidade do LLM) | **60/60**, nenhuma compra indevida | `python src/avaliar.py --controlado --n 3` |
+| RAG: 10 perguntas reservadas | **10/10**; revogado nunca recuperado | `logs/rag/20261018-211035.json` · [`docs/rag.md`](docs/rag.md) |
+| ablação de uma frase do prompt de triagem | 22/22 com e sem; **a frase saiu** | `logs/prompts/` · [`docs/prompts.md`](docs/prompts.md) |
 
 ---
 
@@ -219,65 +304,38 @@ Os números medidos estão em [`docs/decisoes.md`](docs/decisoes.md) e
 
 ```
 README.md              este arquivo
-requirements.txt       dependências com versão fixada
+requirements.txt       todas as versões fixadas (langgraph, fastembed, mcp, openai, ...)
 .env.example           os nomes das variáveis, sem nenhum valor
+conferir_grafo.py      imprime nós e arestas do grafo que src/main.py executa
 
-docs/                  TODA a pesquisa e documentação do case
-  case.md              itens 1 e 2 — tema, usuários, workflow, justificativa
-  modelos.md           item 3 — os 3 candidatos, comparados de verdade
-  arquitetura.md       item 4.4 — diagrama, quem decide, orçamento, gating
-  decisoes.md          o histórico: o que mudou do esboço, e por quê
+docs/
+  entrega.md           o mapa: item do enunciado -> documento, código, evidência
+  case.md              o case, COMPLEMENTADO (§12: o que o domínio ensinou)
+  io.md                o contrato de entrada e saída, e os exemplos reais
+  prompts.md           o plano de prompt engineering e a regra da frase
+  arquitetura.md       o diagrama, as 6 perguntas, a autonomia, o estado e os reducers
+  grafo.md             os padrões, quem decide cada aresta, o que o framework não deu
+  rag.md               as formas de recuperar, as 10 perguntas, o revogado, o corte e o k
+  memoria.md           os dois níveis, as três memórias, a escrita, o esquecimento, a conversa
+  humano.md            o ponto de parada, o prazo, a idempotência
+  modelos.md           a análise de modelos (Parte 1 + adendo da Parte 2)
+  decisoes.md          o histórico das decisões, Partes 1 e 2
+  auditoria-parte2.md  o diagnóstico de partida e o checklist final
   fontes.md            tudo que foi consultado, com link
 
-prompts/               os prompts, versionados
-  sistema-v1.md        a versão do esboço
-  sistema-v2.md        a reescrita
-  sistema-v3.md        a versão ativa
+src/
+  main.py              a CLI: texto livre, conversa, aprovação, remoção
+  grafo.py             o StateGraph: estado, nós, arestas, interrupt, log
+  contratos.py         os schemas Pydantic (Saida, Interpretacao, ...)
+  modelo.py            o cliente do modelo (tool calling, retries, tetos)
+  servico.py           a regra de negócio e a escrita transacional (fronteira de confiança)
+  conhecimento.py      RAG (índice, corte, busca vigente) e memória (episódios, fatos)
+  servidor_mcp.py      o servidor MCP de estoque; transporte.py é o cliente
+  prompts/             os prompts, versionados, carregados em tempo de execução
+  avaliar.py · avaliar_rag.py · experimento_prompt.py · demonstrar_*.py   medições
+  simulador.py         os dublês de teste (nunca usados como medição de LLM)
 
-src/                   o agente
-  db.py                camada de acesso ao SQLite (item 4.2 — a fronteira)
-  ferramentas.py       as 4 ferramentas, as declarações e as FASES
-  agente.py            Estado, Orçamento, gating e o laço (item 4.1)
-  main.py              ponto de entrada (interativo e --demo)
-  avaliar.py           o verificador (itens 2.6 e 2.7)
-  benchmark.py         a verificação mínima dos 3 candidatos (item 3.3)
-
-dados/                 os dados simulados
-  gerar_banco.py       gera dados/estoque.db
-  casos_rotulados.py   o conjunto rotulado, com as asserções
-  casos-dificeis.md    os casos difíceis nomeados (item 2.8)
-
-logs/
-  demo/                as 4 execuções demonstradas (item 4.5)
-  avaliacao/           os relatórios do verificador
-  benchmark/           a comparação dos 3 modelos
+dados/                 o corpus (dados/corpus/), as perguntas do RAG, o catálogo simulado
+logs/                  as evidências citadas nos docs (ver logs/README.md)
+tests/                 os testes
 ```
-
-E, fora da entrega, o material que a explica:
-
-```
-trabalhos/             o enunciado do professor
-notas-aula/            o código das aulas
-ideia-evolucao/        as anotações do grupo, da v1 à v2 da ideia
-agente-estoque-parte1-esboco/
-                       o esboço do grupo, preservado — é o "antes" de
-                       docs/decisoes.md
-```
-
----
-
-## Onde está cada item da entrega
-
-| Item | Onde |
-|---|---|
-| 0 · o grupo | este arquivo, acima |
-| 1 e 2 · tema, usuários, workflow, negócio | [`docs/case.md`](docs/case.md) |
-| 2.6 · o verificador | [`docs/case.md`](docs/case.md) §6 · `src/avaliar.py` |
-| 2.8 · os dados e os casos difíceis | [`dados/casos-dificeis.md`](dados/casos-dificeis.md) |
-| 3 · a análise de modelos | [`docs/modelos.md`](docs/modelos.md) |
-| 4.1 · o agente | `src/agente.py` |
-| 4.2 · a integração com software tradicional | `src/db.py` → SQLite |
-| 4.3 · o prompt engineering | `prompts/sistema-v3.md` |
-| 4.4 · a arquitetura básica | [`docs/arquitetura.md`](docs/arquitetura.md) |
-| 4.5 · a demonstração, com log | `logs/demo/` |
-| 4.6 · as instruções de uso | este arquivo, "Como rodar" e "Como usar" |

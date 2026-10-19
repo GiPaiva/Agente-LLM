@@ -239,3 +239,46 @@ python src/avaliar.py --n 3       # o placar do conjunto completo
 Saídas brutas em `logs/benchmark/` e `logs/avaliacao/`. Toda execução carrega o
 carimbo `prompt × modelo × parâmetros`, então dá para saber qual combinação
 produziu qual número.
+
+---
+
+## Adendo da Parte 2 — o modelo continua o mesmo, e por quê
+
+> Medições de 2026-10-18 no LM Studio local. Sondagem bruta em
+> `logs/diagnostico/sondagem-modelos.txt`; demonstração em
+> `logs/demonstracoes/real/20261018-212136-726175/`.
+
+**A Parte 2 mudou o trabalho do modelo.** Na Parte 1, uma execução era um laço
+ReAct com até 4 ferramentas. Agora são até três **papéis** (triagem, decisão,
+revisão), cada um com saída estruturada forçada. Por isso medimos de novo,
+com um candidato novo disponível na máquina do grupo,
+`qwen/qwen3-4b-thinking-2507`, um modelo de 4B com modo de raciocínio.
+
+| Etapa (mensagens reais do grafo) | `qwen3-4b-thinking` | `gemma-4-e4b` |
+|---|---|---|
+| triagem, `temperature=0` | 615–782 tokens, 14–25 s, rota certa em 3/3 | 610 tokens, 28 s, rota certa |
+| triagem, `temperature=0.6` (sugestão do cartão do modelo) | 3 234 tokens, 78 s, mesma rota | — |
+| decisão, `temperature=0`, `max_tokens=4096` | **truncou**: 4 095 tokens só de raciocínio | 528 tokens, 31 s, resposta correta com fonte |
+| decisão, `temperature=0.6`, `max_tokens=8192` (2 rodadas) | 2 368 e 2 792 tokens, 58 e 71 s, e **repetiu** `consultar_estoque` com a evidência já no contexto | — |
+
+**Decisão: `google/gemma-4-e4b` continua.** Pelo critério escrito antes da
+medição (`auditoria-parte2.md` §3), o qwen falhou por formato e tempo na
+etapa de decisão, antes de qualquer regra de negócio. Na demonstração completa
+da Parte 2, o gemma resolveu os 8 cenários (8/8) com 1 a 4 chamadas e entre
+11 e 149 s de processamento ativo por execução (`io.md` §4).
+
+**O gatilho de latência, revisitado com honestidade.** O gatilho dizia *"60 s
+por consulta"*. As consultas ficaram entre 11 e 55 s. Os dois fluxos que
+**compram** levaram 127 e 149 s, porque fazem 4 chamadas (triagem, decisão,
+revisão consultando e revisão emitindo o parecer). Não tratamos isso como
+gatilho disparado: a compra não é uma consulta, e o caminho com aprovação tem
+uma pessoa no meio. Mas é o primeiro ponto a atacar se o sistema for usado de
+verdade, e o candidato continua sendo o `gpt-oss-120b` hospedado.
+
+**Dois achados de compatibilidade, que valem para qualquer modelo local:**
+1. o LM Studio **recusa** `tool_choice` nomeado (HTTP 400). A forma
+   portável de forçar uma ferramenta é oferecer só ela com
+   `tool_choice="required"` (`src/modelo.py`);
+2. um modelo de raciocínio gasta o `max_tokens` **pensando**. Com o teto de 800
+   da Parte 1, toda chamada do qwen truncaria. O teto passou a ser
+   configurável (`LLM_MAX_TOKENS`, padrão 4 096) e é gravado em cada log.

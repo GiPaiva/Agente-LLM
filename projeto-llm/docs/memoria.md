@@ -151,7 +151,22 @@ que acontece com cada uma:
 fato na conversa A, mostra que a conversa B passa a dizer *"Escolha anterior
 confirmada"*, remove A, mostra que a conversa C volta a não dizer, e varre
 **todas** as tabelas de todos os SQLite e todos os logs procurando o id de A.
-Resultado registrado em `logs/memoria/`.
+
+Resultado real (`logs/memoria/remocao-real-20261018-214747.json`, commit
+`6c48749`, `google/gemma-4-e4b`):
+
+| Passo | Conversa | Entrada | Saída | Pista de memória? |
+|---|---|---|---|---|
+| 1 | A | *Como está o açúcar?* | `esclarecimento`: 1kg ou 5kg? | não |
+| 2 | A | *O de 5kg.* | `respondido`: 9 unidades, abaixo do mínimo de 15 (**grava o fato**) | não |
+| 3 | B | *Como está o açúcar?* | `esclarecimento` + *"Escolha anterior confirmada: ACUCAR_5KG"* | **sim** |
+| — | — | `remover_conversa(A)` | — | — |
+| 4 | C | *Como está o açúcar?* | `esclarecimento`: 1kg ou 5kg? | **não** (voltou) |
+
+| Varredura pelo id de A | Onde estava |
+|---|---|
+| antes da remoção | `checkpoints.sqlite` (`checkpoints`, `writes`), `conhecimento.sqlite` (`episodios`, `fatos`), 2 logs operacionais |
+| depois da remoção | **nenhuma estrutura** |
 
 **O achado da varredura:** o id de A some de todas as estruturas, mas a
 **pista derivada** do fato de A continua no checkpoint e no log da conversa B,
